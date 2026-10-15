@@ -1,0 +1,7 @@
+playwright
+pandas
+requests
+urllib3
+numpy
+scikit-learn
+hdbscan

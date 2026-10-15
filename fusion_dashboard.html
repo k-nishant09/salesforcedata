@@ -1,0 +1,3674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fusion Salesforce Dashboard</title>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="e3a9ccaf-19c1-404d-8a3d-e80da217d92f"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+      background: #f4f4f4;
+      color: #161616;
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Shell header ── */
+    .cds--header {
+      background: #161616;
+      color: #f4f4f4;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #393939;
+    }
+    .header-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f4f4f4;
+      letter-spacing: 0.01em;
+      padding: 0 16px;
+      border-left: 1px solid #393939;
+    }
+    .header-prefix { font-weight: 300; margin-right: 4px; }
+    .header-settings-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #c6c6c6;
+      cursor: pointer;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      border-radius: 2px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .header-settings-btn:hover { background: #393939; color: #f4f4f4; }
+    .header-settings-btn.active { background: #393939; color: #f4f4f4; }
+
+    /* ── Page content ── */
+    .page-content { padding: 32px 32px 64px; max-width: 1400px; }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 300;
+      color: #161616;
+      margin: 0 0 4px;
+    }
+    .page-header p {
+      font-size: 14px;
+      color: #525252;
+      margin: 0;
+    }
+
+    /* ── Load panel ── */
+    .load-panel {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      padding: 24px;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .cds--form-item { flex: 1; min-width: 280px; }
+    .cds--label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.32px;
+      color: #525252;
+      margin-bottom: 8px;
+    }
+    .cds--text-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 16px;
+      border: none;
+      border-bottom: 1px solid #8d8d8d;
+      background: #f4f4f4;
+      font-size: 14px;
+      font-family: inherit;
+      color: #161616;
+      outline: none;
+    }
+    .cds--text-input:focus {
+      outline: 2px solid #0f62fe;
+      outline-offset: -2px;
+    }
+    .cds--btn {
+      height: 40px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 400;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .cds--btn--primary { background: #0f62fe; color: #ffffff; }
+    .cds--btn--primary:hover { background: #0353e9; }
+    .cds--btn--ghost {
+      background: transparent;
+      color: #0f62fe;
+      border: 1px solid transparent;
+      padding: 0 12px;
+      height: 32px;
+      font-size: 12px;
+    }
+    .cds--btn--ghost:hover { background: #e8f0fe; }
+    .cds--btn--danger-ghost {
+      background: transparent;
+      color: #da1e28;
+      border: 1px solid transparent;
+      font-size: 12px;
+      height: 32px;
+      padding: 0 12px;
+    }
+    .load-hint { font-size: 12px; color: #6f6f6f; margin-top: 8px; }
+    .load-hint code {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #e0e0e0;
+      padding: 1px 5px;
+    }
+
+    /* ── Notification ── */
+    .cds--inline-notification {
+      display: none;
+      background: #fff1f1;
+      border-left: 4px solid #da1e28;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #161616;
+      margin-bottom: 24px;
+    }
+    .cds--inline-notification.visible { display: block; }
+
+    /* ── Stat tiles ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1px;
+      background: #e0e0e0;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 32px;
+    }
+    .stat-tile {
+      background: #ffffff;
+      padding: 16px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background 0.15s ease;
+    }
+    .stat-tile.clickable {
+      cursor: pointer;
+    }
+    .stat-tile.clickable:hover {
+      background: #f4f4f4;
+    }
+    .stat-tile.clickable:hover .stat-label {
+      color: #0f62fe;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #525252;
+      margin-bottom: 8px;
+      min-height: 28px;
+      display: flex;
+      align-items: flex-start;
+    }
+    .stat-value {
+      font-size: 36px;
+      font-weight: 300;
+      line-height: 1;
+      color: #161616;
+      margin-top: auto;
+    }
+
+    /* ── Section tabs ── */
+    .cds--tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e0e0e0;
+      margin-bottom: 24px;
+      background: #ffffff;
+    }
+    .cds--tabs__nav-item {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 400;
+      color: #525252;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .cds--tabs__nav-item:hover { color: #161616; background: #f4f4f4; }
+    .cds--tabs__nav-item.active {
+      color: #161616;
+      font-weight: 600;
+      border-bottom-color: #0f62fe;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Category overview table ── */
+    .overview-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .overview-card {
+      background: #ffffff;
+      padding: 0;
+    }
+    .overview-card-header {
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .overview-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #161616;
+    }
+    .overview-card-count {
+      font-size: 22px;
+      font-weight: 300;
+      color: #0f62fe;
+    }
+    .minibar-row {
+      padding: 6px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .minibar-row:hover { background: #f4f4f4; }
+    .minibar-label { font-size: 12px; color: #525252; width: 100px; flex-shrink: 0; }
+    .minibar-track { flex: 1; height: 14px; background: #e0e0e0; overflow: hidden; }
+    .minibar-fill { height: 14px; background-color: #0f62fe; display: block; }
+    .minibar-count { font-size: 12px; font-weight: 600; color: #161616; width: 30px; text-align: right; }
+    .overview-footer {
+      padding: 8px 20px 12px;
+      font-size: 11px;
+      color: #6f6f6f;
+    }
+
+    /* ── Category drill-down ── */
+    .drill-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-well {
+      background: #f0f4ff;
+      border-left: 4px solid #0f62fe;
+      border-radius: 0 4px 4px 0;
+      padding: 0.6rem 1rem 0.6rem 1.25rem;
+    }
+    .cds--select-input {
+      height: 40px;
+      padding: 0 40px 0 16px;
+      border: none;
+      border-bottom: 1px solid #8d8d8d;
+      background: #f4f4f4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23161616' d='M8 11L3 6h10z'/%3E%3C/svg%3E") no-repeat right 12px center;
+      font-size: 14px;
+      font-family: inherit;
+      color: #161616;
+      cursor: pointer;
+      appearance: none;
+      min-width: 220px;
+      outline: none;
+    }
+    .cds--select-input:focus {
+      outline: 2px solid #0f62fe;
+      outline-offset: -2px;
+    }
+
+    .chart-pair {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      background: #e0e0e0;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: #ffffff;
+      padding: 20px 24px 16px;
+    }
+    .chart-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #161616;
+      margin-bottom: 2px;
+    }
+    .chart-card-subtitle {
+      font-size: 12px;
+      color: #6f6f6f;
+      margin-bottom: 16px;
+    }
+    .chart-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f4f4f4;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #525252;
+    }
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+    svg.hbar { display: block; overflow: visible; }
+
+    /* ── Top accounts table ── */
+    .cds--data-table-container { border: 1px solid #e0e0e0; background: #ffffff; }
+    .cds--data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .cds--data-table thead { background: #e0e0e0; }
+    .cds--data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.32px;
+      color: #525252;
+      border-bottom: 1px solid #c6c6c6;
+    }
+    .cds--data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e0e0e0;
+      color: #161616;
+    }
+    .cds--data-table tbody tr:last-child td { border-bottom: none; }
+    .cds--data-table tbody tr:hover td { background: #f4f4f4; }
+    .acct-bar-track { width: 140px; height: 6px; background: #e0e0e0; display: inline-block; vertical-align: middle; margin-left: 8px; }
+    .acct-bar-fill { height: 6px; background: #0f62fe; }
+
+    /* ── Debug panel ── */
+    details { margin-top: 32px; }
+    summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: #525252;
+      padding: 8px 0;
+      user-select: none;
+    }
+    pre {
+      background: #161616;
+      color: #f4f4f4;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 16px;
+      overflow: auto;
+      max-height: 360px;
+      border: none;
+      white-space: pre-wrap;
+    }
+
+    /* ── Skeleton / empty state ── */
+    .empty-state {
+      padding: 48px;
+      text-align: center;
+      color: #6f6f6f;
+      font-size: 14px;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+    }
+    .empty-state-icon { font-size: 32px; margin-bottom: 8px; color: #c6c6c6; }
+  </style>
+</head>
+<body>
+
+  <!-- Shell header -->
+  <header class="cds--header">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="#ffffff" xmlns="http://www.w3.org/2000/svg" style="margin-right:8px;flex-shrink:0">
+      <path d="M16 2L2 9v14l14 7 14-7V9L16 2zm0 2.24L28 10.5v11l-12 6-12-6v-11L16 4.24z"/>
+    </svg>
+    <span class="header-name"><span class="header-prefix">IBM</span>Fusion · Salesforce Dashboard</span>
+    <button id="settings-btn" class="header-settings-btn" title="Settings" aria-label="Settings">
+      <!-- Carbon "settings" icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
+        <path d="M27 16.76v-1.53l1.92-1.68A2 2 0 0 0 29.3 11l-2.36-4a2 2 0 0 0-2.44-.86l-2.39.96a11.91 11.91 0 0 0-1.32-.77l-.51-2.52A2 2 0 0 0 18.36 2h-4.72a2 2 0 0 0-1.92 1.81l-.51 2.52a12.06 12.06 0 0 0-1.32.77l-2.39-.96a2 2 0 0 0-2.44.86l-2.36 4a2 2 0 0 0 .38 2.55L5 15.23v1.54l-1.92 1.68A2 2 0 0 0 2.7 21l2.36 4a2 2 0 0 0 2.44.86l2.39-.96c.43.28.88.52 1.32.77l.51 2.52A2 2 0 0 0 13.64 30h4.72a2 2 0 0 0 1.92-1.81l.51-2.52c.45-.24.9-.49 1.32-.77l2.39.96A2 2 0 0 0 26.94 25l2.36-4a2 2 0 0 0-.38-2.55zM16 22a6 6 0 1 1 6-6 6 6 0 0 1-6 6z"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="page-content">
+
+    <!-- Page heading -->
+    <div class="page-header">
+      <h1>Support Case Analytics</h1>
+      <p>Cases by category, Fusion release, and account — sourced from Salesforce export.</p>
+    </div>
+
+    <!-- Error notification -->
+    <div class="cds--inline-notification" id="error-banner" role="alert"></div>
+
+    <!-- Stat tiles -->
+    <div class="stat-row" id="stat-row" style="display:none"></div>
+
+    <!-- Tabs -->
+    <div id="main-tabs" style="display:none">
+      <div class="cds--tabs" role="tablist">
+        <div class="cds--tabs__nav-item active" role="tab" data-tab="overview">Category overview</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="drilldown">By category</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="bymonth">By month</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="issues">By issue</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="accounts">By accounts</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="caselookup">Case lookup</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="export">Export data</div>
+        <div class="cds--tabs__nav-item" role="tab" data-tab="settings" style="margin-left:auto;color:#6f6f6f;display:flex;align-items:center;gap:6px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 32 32" fill="currentColor"><path d="M27 16.76v-1.53l1.92-1.68A2 2 0 0 0 29.3 11l-2.36-4a2 2 0 0 0-2.44-.86l-2.39.96a11.91 11.91 0 0 0-1.32-.77l-.51-2.52A2 2 0 0 0 18.36 2h-4.72a2 2 0 0 0-1.92 1.81l-.51 2.52a12.06 12.06 0 0 0-1.32.77l-2.39-.96a2 2 0 0 0-2.44.86l-2.36 4a2 2 0 0 0 .38 2.55L5 15.23v1.54l-1.92 1.68A2 2 0 0 0 2.7 21l2.36 4a2 2 0 0 0 2.44.86l2.39-.96c.43.28.88.52 1.32.77l.51 2.52A2 2 0 0 0 13.64 30h4.72a2 2 0 0 0 1.92-1.81l.51-2.52c.45-.24.9-.49 1.32-.77l2.39.96A2 2 0 0 0 26.94 25l2.36-4a2 2 0 0 0-.38-2.55zM16 22a6 6 0 1 1 6-6 6 6 0 0 1-6 6z"/></svg>
+          Settings
+        </div>
+      </div>
+
+      <!-- Tab: Category overview -->
+      <div class="tab-panel active" id="tab-overview">
+        <div class="drill-header filter-well" style="margin-bottom:1rem">
+          <div>
+            <label class="cds--label" for="overview-date-range-select">Date range</label>
+            <select class="cds--select-input" id="overview-date-range-select">
+              <option value="all">All dates</option>
+              <option value="ytd">This year</option>
+              <option value="12m">Last 12 months</option>
+              <option value="6m">Last 6 months</option>
+              <option value="3m">Last 3 months</option>
+              <option value="1m" selected>Last month</option>
+              <option value="2w">Last two weeks</option>
+              <option value="1w">Last week</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div id="overview-custom-dates" style="display:none;align-items:center;gap:8px;margin-left:1rem">
+            <label class="cds--label" style="margin:0">From</label>
+            <input type="date" class="cds--text-input" id="overview-date-from" style="width:148px;height:40px;padding:0 8px">
+            <label class="cds--label" style="margin:0">To</label>
+            <input type="date" class="cds--text-input" id="overview-date-to" style="width:148px;height:40px;padding:0 8px">
+            <button class="cds--btn cds--btn--primary cds--btn--sm" id="overview-date-apply">Apply</button>
+          </div>
+        </div>
+        <div class="overview-grid" id="overview-grid"></div>
+      </div>
+
+      <!-- Tab: By release drill-down -->
+      <div class="tab-panel" id="tab-drilldown">
+        <div class="drill-header filter-well">
+          <div>
+            <label class="cds--label" for="date-range-select">Date range</label>
+            <select class="cds--select-input" id="date-range-select">
+              <option value="all">All dates</option>
+              <option value="ytd">This year</option>
+              <option value="12m">Last 12 months</option>
+              <option value="6m">Last 6 months</option>
+              <option value="3m">Last 3 months</option>
+              <option value="1m" selected>Last month</option>
+              <option value="2w">Last two weeks</option>
+              <option value="1w">Last week</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div id="drilldown-custom-dates" style="display:none;align-items:center;gap:8px;margin-left:1rem">
+            <label class="cds--label" style="margin:0">From</label>
+            <input type="date" class="cds--text-input" id="drilldown-date-from" style="width:148px;height:40px;padding:0 8px">
+            <label class="cds--label" style="margin:0">To</label>
+            <input type="date" class="cds--text-input" id="drilldown-date-to" style="width:148px;height:40px;padding:0 8px">
+            <button class="cds--btn cds--btn--primary cds--btn--sm" id="drilldown-date-apply">Apply</button>
+          </div>
+          <div style="margin-left:1rem">
+            <label class="cds--label" for="category-select">Category</label>
+            <select class="cds--select-input" id="category-select"></select>
+          </div>
+          <div id="subcategory-select-wrap" style="margin-left:1rem;display:none">
+            <label class="cds--label" for="subcategory-select">Subcategory</label>
+            <select class="cds--select-input" id="subcategory-select">
+              <option value="__all__">All subcategories</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-pair" id="chart-pair"></div>
+        <div id="drilldown-issues-header" style="margin-top:1.5rem"></div>
+        <div id="drilldown-issues"></div>
+      </div>
+
+      <!-- Tab: By month -->
+      <div class="tab-panel" id="tab-bymonth">
+        <div class="drill-header filter-well" style="margin-bottom:1rem">
+          <div>
+            <label class="cds--label" for="bymonth-category-select">Category</label>
+            <select class="cds--select-input" id="bymonth-category-select">
+              <option value="__all__">All categories</option>
+            </select>
+          </div>
+          <div id="bymonth-subcategory-select-wrap" style="margin-left:1rem;display:none">
+            <label class="cds--label" for="bymonth-subcategory-select">Subcategory</label>
+            <select class="cds--select-input" id="bymonth-subcategory-select">
+              <option value="__all__">All subcategories</option>
+            </select>
+          </div>
+        </div>
+        <div id="bymonth-chart" class="overview-card" style="width:100%;max-width:100%;box-sizing:border-box;border-top:3px solid #0f62fe"></div>
+        <div id="bymonth-linechart" class="overview-card" style="width:100%;max-width:100%;box-sizing:border-box;margin-top:1.5rem;border-top:3px solid #0f62fe"></div>
+      </div>
+
+      <!-- Tab: By issue -->
+      <div class="tab-panel" id="tab-issues">
+        <div class="drill-header filter-well" style="margin-bottom:1rem">
+          <div>
+            <label class="cds--label" for="issues-date-range-select">Date range</label>
+            <select class="cds--select-input" id="issues-date-range-select">
+              <option value="all">All dates</option>
+              <option value="ytd">This year</option>
+              <option value="12m">Last 12 months</option>
+              <option value="6m">Last 6 months</option>
+              <option value="3m">Last 3 months</option>
+              <option value="1m" selected>Last month</option>
+              <option value="2w">Last two weeks</option>
+              <option value="1w">Last week</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div id="issues-custom-dates" style="display:none;align-items:center;gap:8px;margin-left:1rem">
+            <label class="cds--label" style="margin:0">From</label>
+            <input type="date" class="cds--text-input" id="issues-date-from" style="width:148px;height:40px;padding:0 8px">
+            <label class="cds--label" style="margin:0">To</label>
+            <input type="date" class="cds--text-input" id="issues-date-to" style="width:148px;height:40px;padding:0 8px">
+            <button class="cds--btn cds--btn--primary cds--btn--sm" id="issues-date-apply">Apply</button>
+          </div>
+          <div style="margin-left:1rem">
+            <label class="cds--label" for="issues-release-select">Release</label>
+            <select class="cds--select-input" id="issues-release-select">
+              <option value="__all__">All releases</option>
+            </select>
+          </div>
+          <div style="margin-left:1rem">
+            <label class="cds--label" for="issues-category-select">Category</label>
+            <select class="cds--select-input" id="issues-category-select">
+              <option value="__all__">All categories</option>
+            </select>
+          </div>
+          <div id="issues-subcategory-select-wrap" style="margin-left:1rem;display:none">
+            <label class="cds--label" for="issues-subcategory-select">Subcategory</label>
+            <select class="cds--select-input" id="issues-subcategory-select">
+              <option value="__all__">All subcategories</option>
+            </select>
+          </div>
+          <div style="margin-left:1rem;flex:1;max-width:320px">
+            <label class="cds--label" for="issues-search">Search issues</label>
+            <input class="cds--text-input" id="issues-search" type="text"
+              placeholder="Filter by keyword…" style="height:40px;padding:0 8px;width:100%">
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:flex-end">
+            <button class="cds--btn cds--btn--ghost cds--btn--sm" id="issues-export-btn" type="button" style="white-space:nowrap">Export CSV</button>
+          </div>
+        </div>
+        <div class="cds--data-table-container">
+          <table class="cds--data-table" id="issues-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cluster description</th>
+                <th>Cases</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: By accounts -->
+      <div class="tab-panel" id="tab-accounts">
+        <div class="drill-header filter-well" style="margin-bottom:1rem">
+          <div>
+            <label class="cds--label" for="accounts-date-range-select">Date range</label>
+            <select class="cds--select-input" id="accounts-date-range-select">
+              <option value="all">All dates</option>
+              <option value="ytd">This year</option>
+              <option value="12m">Last 12 months</option>
+              <option value="6m">Last 6 months</option>
+              <option value="3m">Last 3 months</option>
+              <option value="1m" selected>Last month</option>
+              <option value="2w">Last two weeks</option>
+              <option value="1w">Last week</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div style="margin-left:1rem">
+            <label class="cds--label" for="accounts-release-select">Release</label>
+            <select class="cds--select-input" id="accounts-release-select">
+              <option value="__all__">All releases</option>
+            </select>
+          </div>
+          <div id="accounts-custom-dates" style="display:none;align-items:center;gap:8px;margin-left:1rem">
+            <label class="cds--label" style="margin:0">From</label>
+            <input type="date" class="cds--text-input" id="accounts-date-from" style="width:148px;height:40px;padding:0 8px">
+            <label class="cds--label" style="margin:0">To</label>
+            <input type="date" class="cds--text-input" id="accounts-date-to" style="width:148px;height:40px;padding:0 8px">
+            <button class="cds--btn cds--btn--primary cds--btn--sm" id="accounts-date-apply">Apply</button>
+          </div>
+          <div style="margin-left:1rem;flex:1;max-width:320px">
+            <label class="cds--label" for="accounts-search">Search accounts</label>
+            <input class="cds--text-input" id="accounts-search" type="text"
+              placeholder="Filter by name…" style="height:40px;padding:0 8px;width:100%">
+          </div>
+          <div style="margin-left:auto;padding-left:2rem;border-left:1px solid #e0e0e0">
+            <div class="cds--label" style="margin-bottom:2px">Accounts</div>
+            <div id="accounts-table-header" style="font-size:2rem;font-weight:300;line-height:1;color:#161616"></div>
+          </div>
+        </div>
+        <div id="accounts-by-release-container" style="margin-bottom:1.5rem"></div>
+        <div class="cds--data-table-container">
+          <table class="cds--data-table" id="accounts-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Account name</th>
+                <th>Cases</th>
+                <th id="accounts-th-first" style="display:none">First release</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="accounts-pagination" style="display:none;align-items:center;gap:12px;padding:10px 4px;font-size:13px;color:#525252">
+          <button class="cds--btn cds--btn--ghost cds--btn--sm" id="accounts-prev">← Prev</button>
+          <span id="accounts-page-label"></span>
+          <button class="cds--btn cds--btn--ghost cds--btn--sm" id="accounts-next">Next →</button>
+        </div>
+        <div id="account-drill-chart" style="margin-top:1.5rem"></div>
+      </div>
+      <!-- Tab: Case lookup -->
+      <div class="tab-panel" id="tab-caselookup">
+        <div style="max-width:480px;margin-bottom:1.5rem">
+          <label class="cds--label" for="case-lookup-input">Case number</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" class="cds--text-input" id="case-lookup-input"
+              placeholder="e.g. TS0012345"
+              style="flex:1;height:40px;padding:0 12px;font-size:14px"
+              autocomplete="off" spellcheck="false">
+            <button class="cds--btn cds--btn--primary cds--btn--sm" id="case-lookup-btn" type="button">Look up</button>
+          </div>
+        </div>
+        <div id="case-lookup-result"></div>
+      </div>
+
+      <!-- Tab: Export data -->
+      <div class="tab-panel" id="tab-export">
+        <div class="drill-header filter-well" style="margin-bottom:1.25rem">
+          <div>
+            <label class="cds--label" for="export-date-range-select">Date range</label>
+            <select class="cds--select-input" id="export-date-range-select">
+              <option value="all">All dates</option>
+              <option value="ytd">This year</option>
+              <option value="12m">Last 12 months</option>
+              <option value="6m">Last 6 months</option>
+              <option value="3m">Last 3 months</option>
+              <option value="1m" selected>Last month</option>
+              <option value="2w">Last two weeks</option>
+              <option value="1w">Last week</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div id="export-custom-dates" style="display:none;align-items:center;gap:8px;margin-left:1rem">
+            <label class="cds--label" style="margin:0">From</label>
+            <input type="date" class="cds--text-input" id="export-date-from" style="width:148px;height:40px;padding:0 8px">
+            <label class="cds--label" style="margin:0">To</label>
+            <input type="date" class="cds--text-input" id="export-date-to" style="width:148px;height:40px;padding:0 8px">
+            <button class="cds--btn cds--btn--primary cds--btn--sm" id="export-date-apply">Apply</button>
+          </div>
+        </div>
+        <div class="filter-well" style="margin-bottom:1.25rem;display:inline-flex;flex-direction:column;gap:0.75rem">
+          <div>
+            <label class="cds--label" for="export-category-select">Category</label>
+            <select class="cds--select-input" id="export-category-select">
+              <option value="__all__">All categories</option>
+            </select>
+          </div>
+          <div>
+            <label class="cds--label" for="export-release-select">Release</label>
+            <select class="cds--select-input" id="export-release-select">
+              <option value="__all__">All releases</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:0.75rem">
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+            <input type="checkbox" id="export-include-feed">
+            Include case feed data
+          </label>
+        </div>
+        <div id="export-no-raw-notice" style="display:none;margin-top:1.25rem;padding:12px 16px;background:#fff8e1;border-left:4px solid #f59e0b;font-size:13px;color:#57606a;line-height:1.5">
+          Export requires the full dashboard JSON which includes raw case rows.<br>
+          Load <strong id="export-full-json-path"></strong> using the <em>Dashboard JSON path</em> panel below.
+        </div>
+        <button id="export-btn" class="cds--btn cds--btn--primary" style="margin-top:1.25rem;display:none" type="button"></button>
+        <p id="export-truncation-note" style="margin:0.5rem 0 0;font-size:13px;color:#57606a;display:none"></p>
+      </div>
+
+      <!-- Tab: Settings -->
+      <div class="tab-panel" id="tab-settings">
+
+        <!-- Section: Load Dashboard -->
+        <h2 style="font-size:16px;font-weight:600;color:#161616;margin:0 0 16px">Load Dashboard</h2>
+        <div class="load-panel">
+          <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap">
+            <div class="cds--form-item" style="flex:1;min-width:260px">
+              <label class="cds--label" for="data-path-select">Repository dashboards</label>
+              <select class="cds--select-input" id="data-path-select">
+                <option value="data/2026-10-12/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json" selected>2026-10-12 (latest)</option>
+                <option value="data/2026-10-06/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-10-06</option>
+                <option value="data/2026-10-01/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-10-01</option>
+                <option value="data/2026-09-23/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-09-23</option>
+                <option value="data/2026-09-17/fusion-case-feed-consolidated-Clusters-dashboard-nofeed.json">2026-09-17</option>
+                <option value="data/2026-09-14/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-09-14</option>
+                <option value="data/2026-09-08/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-09-08</option>
+                <option value="data/2026-09-04/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-09-04</option>
+                <option value="data/2026-08-31/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-08-31</option>
+                <option value="data/2026-08-19/fusion-case-feed-consolidated-Clusters-dashboard-nofeed.json">2026-08-19</option>
+                <option value="data/2026-08-17/fusion-case-feed-consolidated-Clusters-dashboard-nofeed.json">2026-08-17</option>
+                <option value="data/2026-08-14/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">2026-08-14</option>
+                <option value="data/2026-08-10/0810-fusion-case-feed-consolidated-Clusters-dashboard-nofeed.json">2026-08-10</option>
+                <option value="data/2026-08-03/0803-fusion-case-feed-consolidated-Clusters-dashboard-nofeed.json">2026-08-03</option>
+                <option value="data/Fusion-cases-jul22-dashboard.json">2026-07-22 (legacy)</option>
+              </select>
+            </div>
+            <label class="cds--btn cds--btn--primary" style="cursor:pointer;margin:0;white-space:nowrap">
+              Load from local file
+              <input type="file" id="local-file-input" accept=".json" style="display:none">
+            </label>
+          </div>
+          <!-- hidden input kept for loadDashboard() compatibility -->
+          <input type="hidden" id="data-path" value="data/2026-10-12/fusion-case-feed-consolidated-merged-Clusters-dashboard-nofeed.json">
+          <div id="dashboard-source-info" style="margin-top:0.75rem;font-size:12px;color:#6f6f6f;display:none"></div>
+        </div>
+
+        <!-- Section: Exclusions & Version floor -->
+        <h2 style="font-size:16px;font-weight:600;color:#161616;margin:32px 0 16px">Exclusions</h2>
+        <div style="background:#fff;border:1px solid #e0e0e0;padding:20px 24px">
+          <p style="font-size:13px;color:#6f6f6f;margin:0 0 0.5rem">
+            The following cluster descriptions are excluded from all dashboard views.
+            Edit <code>scripts/exclude.py</code> and re-run <code>build_dashboard_data.py</code> to change this list.
+          </p>
+          <ul id="exclusions-list" style="margin:0;padding-left:1.25rem;font-size:13px;color:#6f6f6f">
+            <li style="color:#a8a8a8;font-style:italic">Load a dashboard JSON to see active exclusions.</li>
+          </ul>
+
+          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e0e0e0">
+            <p style="font-size:13px;color:#6f6f6f;margin:0 0 0.5rem">
+              <strong>Ignore low version numbers</strong> — versions 2.1 through 2.5 may have been incorrectly
+              entered. Use the slider to treat them as <em>Unknown</em> across all dashboard views.
+            </p>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:0.5rem">
+              <input type="range" id="version-floor-slider"
+                min="0" max="5" step="1" value="0"
+                style="width:192px;cursor:pointer;accent-color:#0f62fe">
+              <span id="version-floor-label" style="font-size:13px;color:#525252">Off (no versions ignored)</span>
+            </div>
+            <div style="width:192px;display:flex;justify-content:space-between;margin-top:4px">
+              <span style="font-size:11px;color:#a8a8a8">Off</span>
+              <span style="font-size:11px;color:#a8a8a8">2.1</span>
+              <span style="font-size:11px;color:#a8a8a8">2.2</span>
+              <span style="font-size:11px;color:#a8a8a8">2.3</span>
+              <span style="font-size:11px;color:#a8a8a8">2.4</span>
+              <span style="font-size:11px;color:#a8a8a8">2.5</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Debug -->
+        <h2 style="font-size:16px;font-weight:600;color:#161616;margin:32px 0 16px">Debug / Raw JSON</h2>
+        <div style="background:#fff;border:1px solid #e0e0e0;padding:20px 24px">
+          <pre id="debug-output" style="margin:0;border:none;padding:0">Load a dashboard JSON file to see data here.</pre>
+        </div>
+
+      </div><!-- /tab-settings -->
+    </div><!-- /main-tabs -->
+
+  </div><!-- /page-content -->
+
+  <script>
+    // ── Utility: natural version sort ──────────────────────────────────────────
+    function naturalKey(v) {
+      if (v === 'Unknown') return [1e15];
+      return v.split(/(\d+)/).filter(Boolean).map(p => /^\d+$/.test(p) ? Number(p) : p);
+    }
+    function compareNatural(a, b) {
+      const ka = naturalKey(a), kb = naturalKey(b);
+      const n = Math.max(ka.length, kb.length);
+      for (let i = 0; i < n; i++) {
+        if (ka[i] === undefined) return -1;
+        if (kb[i] === undefined) return  1;
+        if (ka[i] < kb[i]) return -1;
+        if (ka[i] > kb[i]) return  1;
+      }
+      return 0;
+    }
+
+    // ── HTML escaping ──────────────────────────────────────────────────────────
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── CSV export ─────────────────────────────────────────────────────────────
+    function csvCell(v) {
+      const s = String(v ?? '');
+      return /[,"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+    function exportCSV(category, exclusive, rows) {
+      if (!rows || !rows.length) return;
+      const cols = dashboardData.columns || Object.keys(rows[0]);
+      const lines = [cols.map(csvCell).join(',')];
+      rows.forEach(r => lines.push(cols.map(c => csvCell(r[c])).join(',')));
+      const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `${category.replace(/[^a-z0-9]/gi, '_')}${exclusive ? '_exclusive' : '_all'}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Horizontal bar chart (SVG) ─────────────────────────────────────────────
+    function drawHBar(container, bars, title, subtitle, exportCb, isExclusive = false) {
+      const BH = 22, GAP = 6, LW = 80, CW = 38;
+      const W  = container.clientWidth > 0 ? (container.clientWidth - 48) : 500;
+      const BW = W - LW - CW;
+      const maxV = Math.max(...bars.map(b => b.count), 1);
+      const H  = bars.length * (BH + GAP) - GAP + 8;
+      const NS = 'http://www.w3.org/2000/svg';
+
+      container.innerHTML = '';
+
+      const hdr = document.createElement('div');
+      hdr.innerHTML = `<div class="chart-card-title">${title}</div>
+        <div class="chart-card-subtitle">${subtitle}</div>`;
+      container.appendChild(hdr);
+
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('class', 'hbar');
+      svg.setAttribute('width', W);
+      svg.setAttribute('height', H);
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+      bars.forEach((bar, i) => {
+        const y    = i * (BH + GAP);
+        const midY = y + BH / 2 + 4;
+        const empty = bar.count === 0;
+
+        const lbl = document.createElementNS(NS, 'text');
+        lbl.setAttribute('x', LW - 8);
+        lbl.setAttribute('y', midY);
+        lbl.setAttribute('text-anchor', 'end');
+        lbl.setAttribute('font-size', '12');
+        lbl.setAttribute('font-family', "'IBM Plex Sans', sans-serif");
+        lbl.setAttribute('fill', empty ? '#a8a8a8' : '#161616');
+        lbl.textContent = bar.release;
+        svg.appendChild(lbl);
+
+        if (!empty) {
+          const rect = document.createElementNS(NS, 'rect');
+          rect.setAttribute('x', LW);
+          rect.setAttribute('y', y);
+          rect.setAttribute('width', (bar.count / maxV) * BW);
+          rect.setAttribute('height', BH);
+          rect.setAttribute('fill', isExclusive ? '#6929c4' : '#0f62fe');
+          svg.appendChild(rect);
+        }
+
+        const cnt = document.createElementNS(NS, 'text');
+        cnt.setAttribute('x', W);
+        cnt.setAttribute('y', midY);
+        cnt.setAttribute('text-anchor', 'end');
+        cnt.setAttribute('font-size', '12');
+        cnt.setAttribute('font-weight', '600');
+        cnt.setAttribute('font-family', "'IBM Plex Sans', sans-serif");
+        cnt.setAttribute('fill', empty ? '#a8a8a8' : '#161616');
+        cnt.textContent = bar.count;
+        svg.appendChild(cnt);
+      });
+
+      container.appendChild(svg);
+
+      const footer = document.createElement('div');
+      footer.className = 'chart-card-footer';
+      const swatchColor = isExclusive ? '#6929c4' : '#0f62fe';
+      footer.innerHTML = `<div class="legend-item">
+          <svg class="legend-swatch" viewBox="0 0 12 12"><rect width="12" height="12" fill="${swatchColor}"/></svg>
+          Cases by Fusion version
+        </div>`;
+      const btn = document.createElement('button');
+      btn.className = 'cds--btn cds--btn--ghost';
+      btn.textContent = 'Export CSV';
+      btn.addEventListener('click', exportCb);
+      footer.appendChild(btn);
+      container.appendChild(footer);
+    }
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    let dashboardData     = null;
+    let allReleases       = [];
+    let accountsChartMode = 'all'; // 'all' | 'first'
+    let versionFloor      = 0;     // ignore 2.1 … 2.N (0 = no filtering)
+
+    // ── Shared release normaliser ──────────────────────────────────────────────
+    // Converts a raw Product Version cell to a normalised 'major.minor' string.
+    // If the minor number is <= versionFloor it is treated as Unknown (bad data).
+    function normaliseRel(raw) {
+      let rel = String(raw || '').trim();
+      if (!rel || rel === 'nan' || !rel.startsWith('2.')) return 'Unknown';
+      const parts = rel.split('.');
+      if (!parts[1] || !/^\d+$/.test(parts[1])) return 'Unknown';
+      const minor = parseInt(parts[1], 10);
+      if (versionFloor > 0 && minor <= versionFloor) return 'Unknown';
+      return `2.${parts[1]}`;
+    }
+
+    function buildAllReleases(data) {
+      const s = new Set();
+      (data.release_by_category || []).forEach(r => {
+        // Apply version floor: re-normalise the stored release label so floored
+        // versions collapse to 'Unknown' and don't appear in the dropdown.
+        s.add(normaliseRel(r.release));
+      });
+      return [...s].sort((a, b) => {
+        if (a === 'Unknown') return 1;
+        if (b === 'Unknown') return -1;
+        return compareNatural(b, a);
+      });
+    }
+
+    function padToAllReleases(rows, category) {
+      const byR = Object.fromEntries(rows.map(r => [r.release, r.count]));
+      return allReleases.map(release => ({ category, release, count: byR[release] ?? 0 }));
+    }
+
+    function rowsForCategory(source, category) {
+      return [...(source || []).filter(r => r.category === category)]
+        .sort((a, b) => {
+          if (a.release === 'Unknown') return 1;
+          if (b.release === 'Unknown') return -1;
+          return compareNatural(b.release, a.release);
+        });
+    }
+
+    // ── Render: stat tiles ────────────────────────────────────────────────────
+    function renderStats(data) {
+      const row = document.getElementById('stat-row');
+      row.style.display = '';
+      const cats = Object.keys(data.category_counts || {});
+      const topCat = cats.reduce((a, b) =>
+        (data.category_counts[a] || 0) >= (data.category_counts[b] || 0) ? a : b, cats[0] || '—');
+
+      const dr = data.date_range || {};
+      const dateLabel = (dr.oldest && dr.newest) ? `${dr.oldest} — ${dr.newest}` : '—';
+
+      const knownReleases = allReleases.filter(r => r !== 'Unknown');
+      const releaseLabel = knownReleases.length > 1
+        ? `${knownReleases[knownReleases.length - 1]} — ${knownReleases[0]}`
+        : (knownReleases[0] ?? '—');
+
+      const issuesCount = (data.cluster_descriptions || []).length;
+
+      // Unique accounts count (fallback to top_accounts length or derive from raw_rows if present)
+      let accountCount = data.account_count;
+      if (accountCount === undefined || accountCount === null) {
+        if (data.raw_rows_by_category) {
+          const accs = new Set();
+          Object.values(data.raw_rows_by_category).forEach(rows => {
+            rows.forEach(r => {
+              const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+              if (name && name !== 'Unknown' && name !== 'nan') accs.add(name);
+            });
+          });
+          accountCount = accs.size || (data.top_accounts || []).length;
+        } else {
+          accountCount = (data.top_accounts || []).length;
+        }
+      }
+
+      const tiles = [
+        { label: 'Total cases',              value: data.record_count ?? 0 },
+        { label: 'Categories',               value: cats.length, tab: 'drilldown' },
+        { label: 'Common issues identified', value: issuesCount, tab: 'issues' },
+        { label: 'Accounts',                 value: accountCount, tab: 'accounts' },
+        { label: 'Releases',                 value: releaseLabel },
+        { label: 'Date range',               value: dateLabel },
+      ];
+      row.innerHTML = tiles.map(t => `
+        <div class="stat-tile ${t.tab ? 'clickable' : ''}" ${t.tab ? `data-tab-target="${t.tab}" title="Click to view ${t.label}"` : ''}>
+          <div class="stat-label">${t.label}</div>
+          <div class="stat-value" style="${(t.label === 'Date range' || t.label === 'Releases') ? 'font-size:15px;font-weight:400;line-height:1.3' : ''}">${t.value}</div>
+        </div>`).join('');
+
+      row.querySelectorAll('.stat-tile.clickable').forEach(tile => {
+        tile.addEventListener('click', () => {
+          const targetTab = tile.getAttribute('data-tab-target');
+          if (targetTab) activateTab(targetTab);
+        });
+      });
+    }
+
+    // ── Render: overview tab ──────────────────────────────────────────────────
+    function sortCats(cats, countFn) {
+      const nonUnclassified = cats
+        .filter(c => c !== 'Unclassified')
+        .sort((a, b) => countFn(b) - countFn(a));
+      const hasUnclassified = cats.includes('Unclassified');
+      return hasUnclassified ? [...nonUnclassified, 'Unclassified'] : nonUnclassified;
+    }
+
+    function renderOverview(data) {
+      if (!data) data = dashboardData;
+      if (!data) return;
+      const grid    = document.getElementById('overview-grid');
+      const dateVal = document.getElementById('overview-date-range-select').value;
+      grid.innerHTML = '';
+
+      // When a date filter is active, re-derive counts from raw rows
+      let categoryCounts, exclusiveCounts, totalCount;
+      const { from: ovFrom, to: ovTo } = getDateRange(
+        'overview-date-range-select', 'overview-date-from', 'overview-date-to'
+      );
+      if (!ovFrom && !ovTo) {
+        categoryCounts  = data.category_counts  || {};
+        exclusiveCounts = data.exclusive_counts || {};
+        totalCount      = data.record_count ?? 0;
+      } else {
+        const hasRawRows = Object.values(data.raw_rows_by_category || {}).some(r => r.length > 0);
+        if (hasRawRows) {
+          // Full JSON loaded locally — derive from raw rows (exact, supports any granularity)
+          categoryCounts  = {};
+          exclusiveCounts = {};
+          const allCatKeys = Object.keys(data.category_counts || {});
+          const seenCaseNums = new Set();
+          allCatKeys.forEach(cat => {
+            const filtered     = filterRowsByDate((data.raw_rows_by_category           || {})[cat] || [], ovFrom, ovTo);
+            const filteredExcl = filterRowsByDate((data.raw_rows_by_category_exclusive || {})[cat] || [], ovFrom, ovTo);
+            categoryCounts[cat]  = filtered.length;
+            exclusiveCounts[cat] = filteredExcl.length;
+            filtered.forEach(r => { const cn = r['Case Number'] || r['Case #'] || JSON.stringify(r); seenCaseNums.add(cn); });
+          });
+          totalCount = seenCaseNums.size;
+        } else {
+          // Public JSON — use pre-aggregated monthly counts
+          const mc = monthlyCatCounts(data, ovFrom, ovTo);
+          categoryCounts  = Object.fromEntries(Object.entries(mc).filter(([k]) => k !== '__excl'));
+          exclusiveCounts = mc.__excl || {};
+          totalCount = Object.values(categoryCounts).reduce((s, v) => s + v, 0);
+        }
+      }
+
+      const allCats = Object.keys(categoryCounts);
+      const cats           = sortCats(allCats, c => categoryCounts[c]  || 0);
+      const catsSortedExcl = sortCats(allCats, c => exclusiveCounts[c] || 0);
+      const maxV    = Math.max(...cats.map(c => categoryCounts[c]  || 0), 1);
+      const maxExcl = Math.max(...catsSortedExcl.map(c => exclusiveCounts[c] || 0), 1);
+      const exclTotal = allCats.reduce((s, c) => s + (exclusiveCounts[c] || 0), 0);
+
+      // Combined card — togglable between "All" and "Exclusive" views
+      const comboCard = document.createElement('div');
+      comboCard.className = 'overview-card';
+
+      const comboHeader = document.createElement('div');
+      comboHeader.className = 'overview-card-header';
+      comboHeader.innerHTML = `
+        <span class="overview-card-title" style="display:flex;align-items:center;gap:10px">
+          Cases by category
+          <select id="cat-view-select" style="font-size:12px;font-weight:400;border:1px solid #c6c6c6;border-radius:2px;padding:2px 6px;color:#161616;background:#f4f4f4;cursor:pointer">
+            <option value="all" selected>All cases</option>
+            <option value="excl">Exclusive (single category only)</option>
+          </select>
+        </span>
+        <span class="overview-card-count" id="cat-view-count"></span>`;
+      comboCard.appendChild(comboHeader);
+
+      const comboRows = document.createElement('div');
+      comboRows.id = 'cat-view-rows';
+      comboCard.appendChild(comboRows);
+
+      const comboFooter = document.createElement('div');
+      comboFooter.className = 'overview-footer';
+      comboFooter.id = 'cat-view-footer';
+      comboCard.appendChild(comboFooter);
+
+      grid.appendChild(comboCard);
+
+      function renderCatView(mode) {
+        const isExcl     = mode === 'excl';
+        const sortedCats = isExcl ? catsSortedExcl : cats;
+        const counts     = isExcl ? exclusiveCounts : categoryCounts;
+        const maxCount   = isExcl ? maxExcl : maxV;
+        const total      = isExcl ? exclTotal : totalCount;
+        const barColor   = isExcl ? '#6929c4' : '#0f62fe';
+        comboCard.style.borderTop = `3px solid ${barColor}`;
+        document.getElementById('cat-view-count').style.color = barColor;
+        document.getElementById('cat-view-count').textContent = total;
+        comboRows.innerHTML = '';
+        sortedCats.forEach(cat => {
+          const count = counts[cat] || 0;
+          const row = document.createElement('div');
+          row.className = 'minibar-row';
+          if (!isExcl) row.title = `View ${cat} releases`;
+          row.innerHTML = `
+            <span class="minibar-label">${cat}</span>
+            <div class="minibar-track"><div class="minibar-fill" style="width:${(count/maxCount*100).toFixed(1)}%;background-color:${barColor}"></div></div>
+            <span class="minibar-count">${count}</span>`;
+          row.addEventListener('click', () => switchToCategory(cat));
+          comboRows.appendChild(row);
+        });
+        document.getElementById('cat-view-footer').textContent = isExcl
+          ? 'Cases where no other category is tagged · Click a row to drill down by Fusion release →'
+          : 'Click a row to drill down by Fusion release →';
+      }
+
+      renderCatView('all');
+      document.getElementById('cat-view-select').addEventListener('change', e => renderCatView(e.target.value));
+
+      // Release breakdown card
+      // Derive release counts across all cases within date window
+      const hasRawRows = Object.values(data.raw_rows_by_category || {}).some(r => r.length > 0);
+      const relCounts = {};
+      allReleases.forEach(r => { relCounts[r] = 0; });
+
+      if (hasRawRows) {
+        const seenAllRel = new Set();
+        const allCatKeys = Object.keys(data.category_counts || {});
+        allCatKeys.forEach(cat => {
+          const filtered = filterRowsByDate((data.raw_rows_by_category || {})[cat] || [], ovFrom, ovTo);
+          filtered.forEach(r => {
+            const cn = r['Case Number'] || r['Case #'] || JSON.stringify(r);
+            if (!seenAllRel.has(cn)) {
+              seenAllRel.add(cn);
+              const rel = normaliseRel(r[data.release_column]);
+              relCounts[rel] = (relCounts[rel] || 0) + 1;
+            }
+          });
+        });
+      } else {
+        // Pre-aggregated fallback
+        (data.release_by_category || []).forEach(r => {
+          const rel = normaliseRel(r.release);
+          relCounts[rel] = (relCounts[rel] || 0) + r.count;
+        });
+      }
+
+      const totalRelCases = Object.values(relCounts).reduce((s, v) => s + v, 0);
+      const maxRelCount   = Math.max(...Object.values(relCounts), 1);
+      const relBarColor   = '#0f62fe';
+
+      const relCard = document.createElement('div');
+      relCard.className = 'overview-card';
+      relCard.style.borderTop = `3px solid ${relBarColor}`;
+
+      const relHeader = document.createElement('div');
+      relHeader.className = 'overview-card-header';
+      relHeader.innerHTML = `
+        <span class="overview-card-title">Cases by release</span>
+        <span class="overview-card-count" style="color:${relBarColor}">${totalRelCases}</span>`;
+      relCard.appendChild(relHeader);
+
+      // Container for release breakdown of categories below Cases by release
+      const relDrillCard = document.createElement('div');
+      relDrillCard.className = 'overview-card';
+      relDrillCard.style.display = 'none';
+
+      let selectedOverviewRelease = null;
+
+      function renderRelDrillCard(rel) {
+        if (!rel) {
+          relDrillCard.style.display = 'none';
+          return;
+        }
+        relDrillCard.style.display = '';
+
+        // Derive category counts for this release within the current date window
+        let catCountsForRel = {};
+        let catExclCountsForRel = {};
+        let totalCasesForRel = 0;
+        let totalExclCasesForRel = 0;
+
+        if (hasRawRows) {
+          const seenCaseNumsAll = new Set();
+          const allCatKeys = Object.keys(data.category_counts || {});
+          allCatKeys.forEach(cat => {
+            const filteredAll = filterRowsByDate((data.raw_rows_by_category || {})[cat] || [], ovFrom, ovTo)
+              .filter(r => normaliseRel(r[data.release_column]) === rel);
+            const filteredExcl = filterRowsByDate((data.raw_rows_by_category_exclusive || {})[cat] || [], ovFrom, ovTo)
+              .filter(r => normaliseRel(r[data.release_column]) === rel);
+
+            catCountsForRel[cat] = filteredAll.length;
+            catExclCountsForRel[cat] = filteredExcl.length;
+            filteredAll.forEach(r => {
+              const cn = r['Case Number'] || r['Case #'] || JSON.stringify(r);
+              seenCaseNumsAll.add(cn);
+            });
+          });
+          totalCasesForRel = seenCaseNumsAll.size;
+          totalExclCasesForRel = Object.values(catExclCountsForRel).reduce((s, v) => s + v, 0);
+        } else {
+          // Pre-aggregated fallback
+          (data.release_by_category || []).forEach(r => {
+            if (normaliseRel(r.release) === rel) {
+              catCountsForRel[r.category] = (catCountsForRel[r.category] || 0) + r.count;
+            }
+          });
+          (data.release_by_category_exclusive || []).forEach(r => {
+            if (normaliseRel(r.release) === rel) {
+              catExclCountsForRel[r.category] = (catExclCountsForRel[r.category] || 0) + r.count;
+            }
+          });
+          totalCasesForRel = (relCounts[rel] !== undefined) ? relCounts[rel] : Object.values(catCountsForRel).reduce((s, v) => s + v, 0);
+          totalExclCasesForRel = Object.values(catExclCountsForRel).reduce((s, v) => s + v, 0);
+        }
+
+        const sortedCatsRel = sortCats(allCats, c => catCountsForRel[c] || 0);
+        const sortedCatsRelExcl = sortCats(allCats, c => catExclCountsForRel[c] || 0);
+        const maxRelCatVal = Math.max(...sortedCatsRel.map(c => catCountsForRel[c] || 0), 1);
+        const maxRelCatExclVal = Math.max(...sortedCatsRelExcl.map(c => catExclCountsForRel[c] || 0), 1);
+
+        relDrillCard.innerHTML = `
+          <div class="overview-card-header">
+            <span class="overview-card-title" style="display:flex;align-items:center;gap:10px">
+              Cases by category — <strong>Release ${rel}</strong>
+              <select id="rel-cat-view-select" style="font-size:12px;font-weight:400;border:1px solid #c6c6c6;border-radius:2px;padding:2px 6px;color:#161616;background:#f4f4f4;cursor:pointer">
+                <option value="all" selected>All cases</option>
+                <option value="excl">Exclusive (single category only)</option>
+              </select>
+            </span>
+            <span class="overview-card-count" id="rel-cat-view-count"></span>
+          </div>
+          <div id="rel-cat-view-rows"></div>
+          <div class="overview-footer" id="rel-cat-view-footer"></div>`;
+
+        function renderRelCatMode(mode) {
+          const isExcl = mode === 'excl';
+          const sCats = isExcl ? sortedCatsRelExcl : sortedCatsRel;
+          const cCounts = isExcl ? catExclCountsForRel : catCountsForRel;
+          const mCount = isExcl ? maxRelCatExclVal : maxRelCatVal;
+          const tot = isExcl ? totalExclCasesForRel : totalCasesForRel;
+          const bColor = isExcl ? '#6929c4' : '#0f62fe';
+
+          relDrillCard.style.borderTop = `3px solid ${bColor}`;
+          const cntEl = relDrillCard.querySelector('#rel-cat-view-count');
+          cntEl.style.color = bColor;
+          cntEl.textContent = tot;
+
+          const rowsEl = relDrillCard.querySelector('#rel-cat-view-rows');
+          rowsEl.innerHTML = '';
+          sCats.forEach(cat => {
+            const count = cCounts[cat] || 0;
+            const row = document.createElement('div');
+            row.className = 'minibar-row';
+            row.title = `View ${cat} for release ${rel}`;
+            row.innerHTML = `
+              <span class="minibar-label">${cat}</span>
+              <div class="minibar-track"><div class="minibar-fill" style="width:${(count/mCount*100).toFixed(1)}%;background-color:${bColor}"></div></div>
+              <span class="minibar-count">${count}</span>`;
+            row.addEventListener('click', () => {
+              document.getElementById('category-select').value = cat;
+              const issuesHdr = document.getElementById('drilldown-issues-header');
+              if (issuesHdr) issuesHdr.dataset.release = rel;
+              activateTab('drilldown');
+              renderDrilldown();
+            });
+            rowsEl.appendChild(row);
+          });
+
+          relDrillCard.querySelector('#rel-cat-view-footer').textContent = isExcl
+            ? 'Cases where no other category is tagged · Click a row to drill down →'
+            : 'Click a row to drill down →';
+        }
+
+        renderRelCatMode('all');
+        relDrillCard.querySelector('#rel-cat-view-select').addEventListener('change', e => renderRelCatMode(e.target.value));
+      }
+
+      const relRows = document.createElement('div');
+      relRows.id = 'rel-view-rows';
+      allReleases.forEach(rel => {
+        const count = relCounts[rel] || 0;
+        const row = document.createElement('div');
+        row.className = 'minibar-row';
+        row.title = `Click to view category breakdown for release ${rel}`;
+        row.innerHTML = `
+          <span class="minibar-label">${rel}</span>
+          <div class="minibar-track"><div class="minibar-fill" style="width:${(count/maxRelCount*100).toFixed(1)}%;background-color:${relBarColor}"></div></div>
+          <span class="minibar-count">${count}</span>`;
+        row.addEventListener('click', () => {
+          if (selectedOverviewRelease === rel) {
+            selectedOverviewRelease = null;
+            row.style.background = '';
+            renderRelDrillCard(null);
+          } else {
+            selectedOverviewRelease = rel;
+            relRows.querySelectorAll('.minibar-row').forEach(r => r.style.background = '');
+            row.style.background = '#e5f6ff';
+            renderRelDrillCard(rel);
+            relDrillCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+        relRows.appendChild(row);
+      });
+      relCard.appendChild(relRows);
+
+      grid.appendChild(relCard);
+      grid.appendChild(relDrillCard);
+    }
+
+    // ── Monthly aggregation helpers (used when raw rows are absent) ───────────
+    // Filter an array of {year, month, ...count} records to a date window.
+    function filterMonthlyRecords(records, from, to) {
+      if (!from && !to) return records;
+      return records.filter(r => {
+        // compare against the first day of the month
+        const d = new Date(r.year, r.month - 1, 1);
+        if (from && d < new Date(from.getFullYear(), from.getMonth(), 1)) return false;
+        if (to   && d > new Date(to.getFullYear(),   to.getMonth(),   1)) return false;
+        return true;
+      });
+    }
+
+    // Sum monthly category counts into {cat: count} after applying a date window.
+    function monthlyCatCounts(data, from, to) {
+      const result = {};
+      ['monthly_counts_by_category', 'monthly_counts_by_category_exclusive'].forEach((key, idx) => {
+        const out = idx === 0 ? result : (result.__excl = result.__excl || {});
+        Object.entries(data[key] || {}).forEach(([cat, records]) => {
+          out[cat] = filterMonthlyRecords(records, from, to).reduce((s, r) => s + r.count, 0);
+        });
+      });
+      return result;  // result.cat = allCount; result.__excl.cat = exclCount
+    }
+
+    // Build release bar rows for a category from monthly_release_by_category after date filter.
+    function monthlyToReleaseBars(data, category, isExcl, from, to) {
+      const key = isExcl ? 'monthly_release_by_category_exclusive' : 'monthly_release_by_category';
+      const records = filterMonthlyRecords((data[key] || {})[category] || [], from, to);
+      const counts = {};
+      records.forEach(r => { counts[r.release] = (counts[r.release] || 0) + r.count; });
+      return padToAllReleases(
+        Object.entries(counts).map(([release, count]) => ({ category, release, count })),
+        category
+      );
+    }
+
+    // ── Date filter helpers ───────────────────────────────────────────────────
+    // Returns {from: Date|null, to: Date|null} for a given select + custom input IDs
+    function getDateRange(selectId, fromId, toId) {
+      const val = document.getElementById(selectId).value;
+      if (!val || val === 'all') return { from: null, to: null };
+      if (val === 'custom') {
+        const fromVal = document.getElementById(fromId).value;
+        const toVal   = document.getElementById(toId).value;
+        const from    = fromVal ? new Date(fromVal) : null;
+        const to      = toVal   ? new Date(toVal + 'T23:59:59') : null;
+        return { from, to };
+      }
+      if (val === 'ytd') {
+        const now = new Date();
+        const from = new Date(now.getFullYear(), 0, 1);
+        return { from, to: null };
+      }
+      const from = new Date();
+      if (val === '1w')  from.setDate(from.getDate()   -  7);
+      if (val === '2w')  from.setDate(from.getDate()   - 14);
+      if (val === '1m')  from.setMonth(from.getMonth() -  1);
+      if (val === '3m')  from.setMonth(from.getMonth() -  3);
+      if (val === '6m')  from.setMonth(from.getMonth() -  6);
+      if (val === '12m') from.setMonth(from.getMonth() - 12);
+      return { from, to: null };
+    }
+
+    function filterRowsByDate(rows, from, to) {
+      if (!from && !to) return rows;
+      return rows.filter(r => {
+        const raw = r['Date/Time Opened'];
+        if (!raw) return false;
+        const d = new Date(raw);
+        if (isNaN(d)) return false;
+        if (from && d < from) return false;
+        if (to   && d > to)   return false;
+        return true;
+      });
+    }
+
+    function rawRowsToReleaseBars(rows, category) {
+      const releaseCol = dashboardData.release_column;
+      const counts = {};
+      rows.forEach(r => {
+        const rel = normaliseRel(releaseCol ? r[releaseCol] : '');
+        counts[rel] = (counts[rel] || 0) + 1;
+      });
+      return padToAllReleases(
+        Object.entries(counts).map(([release, count]) => ({ category, release, count })),
+        category
+      );
+    }
+
+    // ── Render: drill-down tab ────────────────────────────────────────────────
+    function renderDrilldown() {
+      const category    = document.getElementById('category-select').value;
+      const dateVal     = document.getElementById('date-range-select').value;
+      const pair        = document.getElementById('chart-pair');
+      const issuesEl    = document.getElementById('drilldown-issues');
+      const issuesHdr   = document.getElementById('drilldown-issues-header');
+      pair.innerHTML      = '';
+      issuesEl.innerHTML  = '';
+      issuesHdr.innerHTML = '';
+      const subcatVal = document.getElementById('subcategory-select').value;
+      if (!dashboardData || !category) return;
+
+      const isAllCats = category === '__all__';
+
+      const dateLabelMap = {
+        all: 'all dates', 'ytd': 'this year', '12m': 'last 12 months',
+        '6m': 'last 6 months', '3m': 'last 3 months', '1m': 'last month',
+        '2w': 'last two weeks', '1w': 'last week'
+      };
+      const { from: ddFrom, to: ddTo } = getDateRange(
+        'date-range-select', 'drilldown-date-from', 'drilldown-date-to'
+      );
+      const dateLabel = dateVal === 'custom'
+        ? (() => {
+            const f = document.getElementById('drilldown-date-from').value;
+            const t = document.getElementById('drilldown-date-to').value;
+            return [f, t].filter(Boolean).join(' — ') || 'custom range';
+          })()
+        : (dateLabelMap[dateVal] || 'all dates');
+
+      // Raw rows for this category (or all categories), optionally date-filtered
+      let rawAll, rawExcl;
+      if (isAllCats) {
+        // Union all categories, deduplicated by Case Number
+        const seenAll = new Set(), seenExcl = new Set();
+        rawAll  = []; rawExcl = [];
+        Object.keys(dashboardData.raw_rows_by_category || {}).forEach(cat => {
+          filterRowsByDate((dashboardData.raw_rows_by_category           || {})[cat] || [], ddFrom, ddTo)
+            .forEach(r => { const k = r['Case Number'] || JSON.stringify(r); if (!seenAll.has(k))  { seenAll.add(k);  rawAll.push(r);  } });
+          filterRowsByDate((dashboardData.raw_rows_by_category_exclusive || {})[cat] || [], ddFrom, ddTo)
+            .forEach(r => { const k = r['Case Number'] || JSON.stringify(r); if (!seenExcl.has(k)) { seenExcl.add(k); rawExcl.push(r); } });
+        });
+      } else {
+        rawAll  = filterRowsByDate((dashboardData.raw_rows_by_category           || {})[category] || [], ddFrom, ddTo);
+        rawExcl = filterRowsByDate((dashboardData.raw_rows_by_category_exclusive || {})[category] || [], ddFrom, ddTo);
+      }
+
+      const hasRawRows = rawAll.length > 0 || rawExcl.length > 0 ||
+        Object.values(dashboardData.raw_rows_by_category || {}).some(r => r.length > 0);
+
+      // Subcategory filter only applies to single-category view
+      const subcatCol = `${category} Subcategory`;
+      function filterBySubcat(rows) {
+        if (isAllCats || subcatVal === '__all__') return rows;
+        return rows.filter(r => (r[subcatCol] || '').trim() === subcatVal);
+      }
+      const rawAllFiltered  = filterBySubcat(rawAll);
+      const rawExclFiltered = filterBySubcat(rawExcl);
+
+      // Derive release bar data: prefer raw rows; fall back to monthly aggregates (public JSON)
+      const useSubcat = !isAllCats && subcatVal !== '__all__';
+      const allRows  = (!ddFrom && !ddTo && !useSubcat && !isAllCats)
+        ? padToAllReleases(rowsForCategory(dashboardData.release_by_category, category), category)
+        : hasRawRows
+          ? rawRowsToReleaseBars(rawAllFiltered, category)
+          : isAllCats ? [] : monthlyToReleaseBars(dashboardData, category, false, ddFrom, ddTo);
+      const exclRows = (!ddFrom && !ddTo && !useSubcat && !isAllCats)
+        ? padToAllReleases(rowsForCategory(dashboardData.release_by_category_exclusive, category), category)
+        : hasRawRows
+          ? rawRowsToReleaseBars(rawExclFiltered, category)
+          : isAllCats ? [] : monthlyToReleaseBars(dashboardData, category, true, ddFrom, ddTo);
+
+      // Build the category label used in all chart/table titles
+      const catLabel = isAllCats ? 'All categories' : useSubcat ? `${category} (${subcatVal})` : category;
+
+      // ── Release picker — rendered between the bar charts and the tables ───
+      // Preserve the previously selected value across re-renders.
+      const prevRelease = issuesHdr.dataset.release || '__all__';
+      const relHdr = document.createElement('div');
+      relHdr.style.cssText = 'margin-bottom:1.25rem;padding:0.75rem 1rem 0.75rem 1.25rem;background:#f0f4ff;border-left:4px solid #0f62fe;border-radius:0 4px 4px 0;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap';
+      relHdr.innerHTML = `
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#0f62fe;letter-spacing:0.02em;margin-bottom:4px;text-transform:uppercase">Filter tables by release</div>
+          <select class="cds--select-input" id="drilldown-release-select" style="min-width:140px">
+            <option value="__all__">All releases</option>
+            ${allReleases.map(r => `<option value="${r}"${r === prevRelease ? ' selected' : ''}>${r}</option>`).join('')}
+          </select>
+        </div>
+        <p style="margin:0;font-size:12px;color:#525252;line-height:1.4">Filters the Subcategories and Issues tables below.<br>The bar charts above show all releases and are unaffected.</p>`;
+      issuesHdr.appendChild(relHdr);
+      document.getElementById('drilldown-release-select').addEventListener('change', () => {
+        issuesHdr.dataset.release = document.getElementById('drilldown-release-select').value;
+        renderDrilldown();
+      });
+
+      const drilldownRelease = prevRelease;
+      function filterByRelease(rows) {
+        if (drilldownRelease === '__all__') return rows;
+        return rows.filter(r => normaliseRel(r[dashboardData.release_column]) === drilldownRelease);
+      }
+      const tableAllRows  = filterByRelease(rawAllFiltered);
+      const tableExclRows = filterByRelease(rawExclFiltered);
+
+      // Single combined chart card with All/Exclusive toggle dropdown
+      const comboCard = document.createElement('div');
+      comboCard.className = 'chart-card';
+      pair.appendChild(comboCard);
+
+      function renderDrilldownChart(mode) {
+        const isExcl   = mode === 'excl';
+        const rows     = isExcl ? exclRows : allRows;
+        const rawRows  = isExcl ? rawExclFiltered : rawAllFiltered;
+        const totalCnt = rows.reduce((s, r) => s + r.count, 0);
+        const verCnt   = rows.filter(r => r.count > 0).length;
+        const barColor = isExcl ? '#6929c4' : '#0f62fe';
+        const subtitle = `${verCnt} versions · ${totalCnt} total · ${dateLabel}`;
+
+        comboCard.style.borderTop = `3px solid ${barColor}`;
+
+        const titleHtml = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span>${catLabel}</span>
+          <select id="drilldown-view-select" style="font-size:12px;font-weight:400;border:1px solid #c6c6c6;border-radius:2px;padding:2px 6px;color:#161616;background:#f4f4f4;cursor:pointer">
+            <option value="all"${!isExcl ? ' selected' : ''}>All cases</option>
+            <option value="excl"${isExcl ? ' selected' : ''}>Exclusive (single category only)</option>
+          </select>
+        </div>`;
+
+        drawHBar(
+          comboCard, rows,
+          titleHtml,
+          subtitle,
+          () => exportCSV(category, isExcl, rawRows),
+          isExcl
+        );
+
+        document.getElementById('drilldown-view-select').addEventListener('change', e => {
+          renderDrilldownChart(e.target.value);
+        });
+      }
+
+      renderDrilldownChart('all');
+
+      // ── Subcategory summary table (single category only, not All categories) ─────
+      if (tableAllRows.length && !useSubcat && !isAllCats) {
+        const subcatCounts = {};
+        tableAllRows.forEach(r => {
+          const v = (r[subcatCol] || '').trim();
+          if (v) subcatCounts[v] = (subcatCounts[v] || 0) + 1;
+        });
+        const subcatEntries = Object.entries(subcatCounts).sort((a, b) => b[1] - a[1]);
+        if (subcatEntries.length) {
+          const relLabel = drilldownRelease !== '__all__' ? ` · ${drilldownRelease}` : '';
+          const totalSub = subcatEntries.reduce((s, [, c]) => s + c, 0);
+          const maxSub   = subcatEntries[0][1];
+          const subCard  = document.createElement('div');
+          subCard.className = 'overview-card';
+          subCard.style.cssText = 'width:100%;max-width:100%;box-sizing:border-box;margin-top:1.5rem;border-top:3px solid #0f62fe';
+          subCard.innerHTML = `<div class="overview-card-header">
+              <span class="overview-card-title">Subcategories in <strong>${category}</strong>${relLabel ? `<span style="font-weight:400;color:#6f6f6f;font-size:13px"> — ${drilldownRelease}</span>` : ''}</span>
+              <span class="overview-card-count">${totalSub} cases</span>
+            </div>`;
+          const scrollWrap = document.createElement('div');
+          scrollWrap.style.cssText = `overflow-y:auto;max-height:${subcatEntries.length <= 12 ? 'none' : '600px'};margin-top:0.5rem;border:1px solid #e0e0e0`;
+          const table = document.createElement('table');
+          table.className = 'cds--data-table';
+          table.style.width = '100%';
+          table.innerHTML = '<thead><tr><th>#</th><th>Subcategory</th><th>Cases</th><th></th></tr></thead>';
+          const tbody = document.createElement('tbody');
+          subcatEntries.forEach(([name, count], i) => {
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.title = `Filter to ${name}`;
+            tr.innerHTML = `
+              <td style="color:#6f6f6f;white-space:nowrap">${i + 1}</td>
+              <td>${name}</td>
+              <td><strong>${count}</strong></td>
+              <td><div class="acct-bar-track"><div class="acct-bar-fill" style="width:${(count / maxSub * 100).toFixed(1)}%;background-color:#0f62fe"></div></div></td>`;
+            tr.addEventListener('click', () => {
+              const sel = document.getElementById('subcategory-select');
+              sel.value = name;
+              sel.dispatchEvent(new Event('change'));
+            });
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          scrollWrap.appendChild(table);
+          subCard.appendChild(scrollWrap);
+          issuesEl.appendChild(subCard);
+        }
+      }
+
+      // ── Issues for this category ──────────────────────────────────────────
+      // Prefer raw rows (available when loaded locally); fall back to pre-aggregated
+      // cluster_descriptions_by_category (present in the public JSON).
+      // When a release is selected we always have raw rows so pre-agg is not used.
+      const aggAll  = (!isAllCats && drilldownRelease === '__all__') ? (dashboardData.cluster_descriptions_by_category           || {})[category] : null;
+      const aggExcl = (!isAllCats && drilldownRelease === '__all__') ? (dashboardData.cluster_descriptions_by_category_exclusive || {})[category] : null;
+      if (tableAllRows.length || aggAll?.length)
+        issuesEl.appendChild(buildIssuesCard(tableAllRows, catLabel, false, useSubcat ? null : aggAll));
+      if (tableExclRows.length || aggExcl?.length)
+        issuesEl.appendChild(buildIssuesCard(tableExclRows, catLabel, true, useSubcat ? null : aggExcl));
+    }
+
+    function buildIssuesCard(rows, category, isExclusive, preAggIssues) {
+      // If raw rows are available, derive cluster counts from them (supports date filtering).
+      // Otherwise fall back to pre-aggregated data from the public JSON.
+      let issues;
+      let totalCases;
+      if (rows.length) {
+        const descCounts = {};
+        rows.forEach(r => {
+          const desc = (r['Cluster Description'] || 'Unclassified / Noise').trim();
+          descCounts[desc] = (descCounts[desc] || 0) + 1;
+        });
+        const issuesRaw = Object.entries(descCounts).map(([description, count]) => ({ description, count }));
+        issues = [
+          ...issuesRaw.filter(i => !i.description.toLowerCase().startsWith('unclassified')).sort((a, b) => b.count - a.count),
+          ...issuesRaw.filter(i =>  i.description.toLowerCase().startsWith('unclassified')),
+        ];
+        totalCases = rows.length;
+      } else {
+        issues = preAggIssues || [];
+        totalCases = issues.reduce((s, i) => s + i.count, 0);
+      }
+
+      const maxV = issues.find(i => !i.description.toLowerCase().startsWith('unclassified'))?.count || issues[0]?.count || 1;
+      const barColor = isExclusive ? '#6929c4' : '#0f62fe';
+      const titleSuffix = isExclusive ? ` — <span style="font-weight:400;color:#6f6f6f">cases where ${category} is the only category</span>` : '';
+
+      const card = document.createElement('div');
+      card.className = 'overview-card';
+      const borderAccent = isExclusive ? 'border-top:3px solid #6929c4' : 'border-top:3px solid #0f62fe';
+      card.style.cssText = `width:100%;max-width:100%;box-sizing:border-box;margin-top:1.5rem;${borderAccent}`;
+      card.innerHTML = `<div class="overview-card-header">
+          <span class="overview-card-title">Issues in <strong>${category}</strong>${titleSuffix}</span>
+          <span class="overview-card-count">${totalCases} cases</span>
+        </div>`;
+
+      const ROW_H = 49; // px per tbody row: 14px font + 12px top + 12px bottom padding + 1px border
+      const scrollWrap = document.createElement('div');
+      scrollWrap.style.cssText = `overflow-y:auto;max-height:${7 * ROW_H}px;margin-top:0.5rem;border:1px solid #e0e0e0`;
+
+      const table = document.createElement('table');
+      table.className = 'cds--data-table';
+      table.style.cssText = 'width:100%';
+      table.innerHTML = `<thead><tr><th>#</th><th>Cluster description</th><th>Cases</th><th></th></tr></thead>`;
+      const tbody = document.createElement('tbody');
+      issues.forEach((item, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:#6f6f6f;white-space:nowrap">${i + 1}</td>
+          <td>${item.description}</td>
+          <td><strong>${item.count}</strong></td>
+          <td><div class="acct-bar-track"><div class="acct-bar-fill" style="width:${(item.count / maxV * 100).toFixed(1)}%;background-color:${barColor}"></div></div></td>`;
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      scrollWrap.appendChild(table);
+      card.appendChild(scrollWrap);
+      return card;
+    }
+
+    function switchToCategory(cat) {
+      document.getElementById('category-select').value = cat;
+      activateTab('drilldown');
+      renderDrilldown();
+    }
+
+
+    // ── Render: by month tab ─────────────────────────────────────────────────
+    function renderByMonth() {
+      const container = document.getElementById('bymonth-chart');
+      const catVal    = document.getElementById('bymonth-category-select').value;
+      const subcatVal = document.getElementById('bymonth-subcategory-select')?.value || '__all__';
+      container.innerHTML = '';
+      if (!dashboardData) return;
+
+      const hasRawRows = Object.values(dashboardData.raw_rows_by_category || {}).some(r => r.length > 0);
+
+      // Tally by YYYY-MM — prefer raw rows, fall back to monthly pre-aggregated data
+      const monthlyCounts = {};
+      let totalCases = 0;
+
+      if (hasRawRows) {
+        // Full JSON: derive from raw rows
+        let rows;
+        if (catVal === '__all__') {
+          const seen = new Set();
+          rows = [];
+          Object.values(dashboardData.raw_rows_by_category || {}).forEach(catRows => {
+            catRows.forEach(r => {
+              const key = r['Case Number'] || JSON.stringify(r);
+              if (!seen.has(key)) { seen.add(key); rows.push(r); }
+            });
+          });
+        } else {
+          rows = (dashboardData.raw_rows_by_category || {})[catVal] || [];
+        }
+        // Apply subcategory filter when one is selected
+        const subcatColBM = `${catVal} Subcategory`;
+        if (subcatVal !== '__all__') {
+          rows = rows.filter(r => (r[subcatColBM] || '').trim() === subcatVal);
+        }
+        rows.forEach(r => {
+          const raw = r['Date/Time Opened'];
+          if (!raw) return;
+          const d = new Date(raw);
+          if (isNaN(d)) return;
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
+        });
+        totalCases = rows.length;
+      } else {
+        // Public JSON: use monthly_counts_by_category
+        const src = dashboardData.monthly_counts_by_category || {};
+        const cats = catVal === '__all__' ? Object.keys(src) : [catVal];
+        cats.forEach(cat => {
+          (src[cat] || []).forEach(r => {
+            const key = `${r.year}-${String(r.month).padStart(2, '0')}`;
+            monthlyCounts[key] = (monthlyCounts[key] || 0) + r.count;
+          });
+        });
+        totalCases = Object.values(monthlyCounts).reduce((s, v) => s + v, 0);
+      }
+
+      const months = Object.keys(monthlyCounts).sort();
+      if (!months.length) {
+        container.innerHTML = '<p style="color:#6f6f6f;padding:16px">No date data available — ensure cases have a Date/Time Opened column.</p>';
+        return;
+      }
+
+      const maxV = Math.max(...months.map(m => monthlyCounts[m]), 1);
+      const catLabel = catVal === '__all__' ? 'All categories'
+        : subcatVal !== '__all__' ? `${catVal} (${subcatVal})`
+        : catVal;
+
+      // Shared CSV export for both tiles
+      function exportMonthlyCsv() {
+        const lines = ['Month,Cases'];
+        months.forEach(m => {
+          const [yr, mo] = m.split('-');
+          const label = new Date(yr, mo - 1, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+          lines.push(`"${label}",${monthlyCounts[m]}`);
+        });
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `by_month_${catVal}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Header
+      const hdr = document.createElement('div');
+      hdr.innerHTML = `<div class="overview-card-header">
+          <span class="overview-card-title">Cases opened per month — <span style="font-weight:400">${catLabel}</span></span>
+          <span class="overview-card-count">${totalCases} cases</span>
+        </div>`;
+      container.appendChild(hdr);
+
+      // Vertical bar chart — same geometry as the line chart below so data points align
+      {
+        const NS    = 'http://www.w3.org/2000/svg';
+        const PAD   = { top: 28, right: 32, bottom: 52, left: 44 };
+        const W     = Math.min((container.clientWidth || 700) - 32, 900);
+        const H     = 240;
+        const PW    = W - PAD.left - PAD.right;
+        const PH    = H - PAD.top  - PAD.bottom;
+        const xStep = PW / Math.max(months.length - 1, 1);
+        const BAR_W = Math.max(Math.min(xStep * 0.6, 36), 4);
+
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('width', W);
+        svg.setAttribute('height', H);
+        svg.style.display = 'block';
+
+        // Y-axis gridlines + labels
+        for (let i = 0; i <= 4; i++) {
+          const val = Math.round(maxV * i / 4);
+          const y   = PAD.top + PH - (PH * i / 4);
+          const line = document.createElementNS(NS, 'line');
+          line.setAttribute('x1', PAD.left); line.setAttribute('x2', W - PAD.right);
+          line.setAttribute('y1', y);        line.setAttribute('y2', y);
+          line.setAttribute('stroke', i === 0 ? '#161616' : '#e0e0e0');
+          svg.appendChild(line);
+          const lbl = document.createElementNS(NS, 'text');
+          lbl.setAttribute('x', PAD.left - 6); lbl.setAttribute('y', y + 4);
+          lbl.setAttribute('text-anchor', 'end');
+          lbl.setAttribute('font-size', '11'); lbl.setAttribute('fill', '#6f6f6f');
+          lbl.textContent = val;
+          svg.appendChild(lbl);
+        }
+
+        // Bars — centred on the same x as line chart data points
+        months.forEach((m, i) => {
+          const count    = monthlyCounts[m];
+          const [yr, mo] = m.split('-');
+          const cx       = PAD.left + i * xStep;           // data-point centre
+          const barH     = maxV > 0 ? Math.round(PH * count / maxV) : 0;
+          const x        = cx - BAR_W / 2;
+          const y        = PAD.top + PH - barH;
+
+          const rect = document.createElementNS(NS, 'rect');
+          rect.setAttribute('x', x); rect.setAttribute('y', y);
+          rect.setAttribute('width', BAR_W); rect.setAttribute('height', Math.max(barH, 1));
+          rect.setAttribute('fill', '#0f62fe');
+          svg.appendChild(rect);
+
+          // Count above bar
+          const cnt = document.createElementNS(NS, 'text');
+          cnt.setAttribute('x', cx); cnt.setAttribute('y', y - 4);
+          cnt.setAttribute('text-anchor', 'middle');
+          cnt.setAttribute('font-size', '10'); cnt.setAttribute('font-weight', '600');
+          cnt.setAttribute('fill', '#161616');
+          cnt.textContent = count;
+          svg.appendChild(cnt);
+
+          // X-axis month label
+          const shortMo = new Date(yr, mo - 1, 1).toLocaleString('default', { month: 'short' });
+          const moLbl = document.createElementNS(NS, 'text');
+          moLbl.setAttribute('x', cx); moLbl.setAttribute('y', PAD.top + PH + 14);
+          moLbl.setAttribute('text-anchor', 'middle');
+          moLbl.setAttribute('font-size', '10'); moLbl.setAttribute('fill', '#161616');
+          moLbl.textContent = shortMo;
+          svg.appendChild(moLbl);
+
+          // Year label only when it changes
+          const prevYr = i > 0 ? months[i - 1].split('-')[0] : null;
+          if (yr !== prevYr) {
+            const yrLbl = document.createElementNS(NS, 'text');
+            yrLbl.setAttribute('x', cx); yrLbl.setAttribute('y', PAD.top + PH + 26);
+            yrLbl.setAttribute('text-anchor', 'middle');
+            yrLbl.setAttribute('font-size', '10'); yrLbl.setAttribute('fill', '#6f6f6f');
+            yrLbl.textContent = yr;
+            svg.appendChild(yrLbl);
+          }
+        });
+
+        container.appendChild(svg);
+      }
+
+      // Bar chart footer with export button
+      const barFooter = document.createElement('div');
+      barFooter.className = 'chart-card-footer';
+      const barExportBtn = document.createElement('button');
+      barExportBtn.className = 'cds--btn cds--btn--ghost';
+      barExportBtn.textContent = 'Export CSV';
+      barExportBtn.addEventListener('click', exportMonthlyCsv);
+      barFooter.appendChild(barExportBtn);
+      container.appendChild(barFooter);
+
+      // ── Line chart ───────────────────────────────────────────────────────────
+      const lc      = document.getElementById('bymonth-linechart');
+      lc.innerHTML  = '';
+      const NS      = 'http://www.w3.org/2000/svg';
+      const PAD     = { top: 24, right: 32, bottom: 48, left: 44 };
+      const W       = Math.min((lc.clientWidth || 700) - 32, 900);
+      const H       = 260;
+      const PW      = W - PAD.left - PAD.right;
+      const PH      = H - PAD.top  - PAD.bottom;
+      const counts  = months.map(m => monthlyCounts[m]);
+      const yMax    = Math.max(...counts, 1);
+      const xStep   = PW / Math.max(months.length - 1, 1);
+
+      const lcHdr = document.createElement('div');
+      lcHdr.innerHTML = `<div class="overview-card-header" style="margin-bottom:0.5rem">
+          <span class="overview-card-title">Monthly trend — <span style="font-weight:400">${catLabel}</span></span>
+          <span class="overview-card-count"></span>
+        </div>`;
+      lc.appendChild(lcHdr);
+
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('width', W);
+      svg.setAttribute('height', H);
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.style.display = 'block';
+
+      // Y-axis gridlines + labels (5 intervals)
+      const yTicks = 5;
+      for (let i = 0; i <= yTicks; i++) {
+        const val  = Math.round(yMax * i / yTicks);
+        const y    = PAD.top + PH - (i / yTicks) * PH;
+
+        const gl = document.createElementNS(NS, 'line');
+        gl.setAttribute('x1', PAD.left); gl.setAttribute('x2', PAD.left + PW);
+        gl.setAttribute('y1', y);        gl.setAttribute('y2', y);
+        gl.setAttribute('stroke', '#e0e0e0'); gl.setAttribute('stroke-width', '1');
+        svg.appendChild(gl);
+
+        const lbl = document.createElementNS(NS, 'text');
+        lbl.setAttribute('x', PAD.left - 6);
+        lbl.setAttribute('y', y + 4);
+        lbl.setAttribute('text-anchor', 'end');
+        lbl.setAttribute('font-size', '11');
+        lbl.setAttribute('fill', '#6f6f6f');
+        lbl.setAttribute('font-family', "'IBM Plex Sans', sans-serif");
+        lbl.textContent = val;
+        svg.appendChild(lbl);
+      }
+
+      // X-axis labels — show every Nth to avoid crowding
+      const maxLabels = Math.floor(PW / 44);
+      const stride    = Math.max(1, Math.ceil(months.length / maxLabels));
+      months.forEach((m, i) => {
+        if (i % stride !== 0 && i !== months.length - 1) return;
+        const x = PAD.left + i * xStep;
+        const [yr, mo] = m.split('-');
+        const lbl = new Date(yr, mo - 1, 1)
+          .toLocaleString('default', { month: 'short', year: '2-digit' });
+
+        const t = document.createElementNS(NS, 'text');
+        t.setAttribute('x', x);
+        t.setAttribute('y', PAD.top + PH + 16);
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('font-size', '11');
+        t.setAttribute('fill', '#6f6f6f');
+        t.setAttribute('font-family', "'IBM Plex Sans', sans-serif");
+        t.textContent = lbl;
+        svg.appendChild(t);
+
+        const tick = document.createElementNS(NS, 'line');
+        tick.setAttribute('x1', x); tick.setAttribute('x2', x);
+        tick.setAttribute('y1', PAD.top + PH); tick.setAttribute('y2', PAD.top + PH + 4);
+        tick.setAttribute('stroke', '#c6c6c6'); tick.setAttribute('stroke-width', '1');
+        svg.appendChild(tick);
+      });
+
+      // Line path
+      const pts = months.map((m, i) => {
+        const x = PAD.left + i * xStep;
+        const y = PAD.top  + PH - (monthlyCounts[m] / yMax) * PH;
+        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', pts.join(' '));
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#0f62fe');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
+
+      // Dots + tooltips
+      months.forEach((m, i) => {
+        const x   = PAD.left + i * xStep;
+        const y   = PAD.top  + PH - (monthlyCounts[m] / yMax) * PH;
+        const [yr, mo] = m.split('-');
+        const lbl = new Date(yr, mo - 1, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+
+        const circle = document.createElementNS(NS, 'circle');
+        circle.setAttribute('cx', x.toFixed(1));
+        circle.setAttribute('cy', y.toFixed(1));
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', '#0f62fe');
+        circle.setAttribute('stroke', '#ffffff');
+        circle.setAttribute('stroke-width', '2');
+
+        const titleEl = document.createElementNS(NS, 'title');
+        titleEl.textContent = `${lbl}: ${monthlyCounts[m]} cases`;
+        circle.appendChild(titleEl);
+        svg.appendChild(circle);
+      });
+
+      lc.appendChild(svg);
+
+      // Line chart footer with export button
+      const lcFooter = document.createElement('div');
+      lcFooter.className = 'chart-card-footer';
+      const lcExportBtn = document.createElement('button');
+      lcExportBtn.className = 'cds--btn cds--btn--ghost';
+      lcExportBtn.textContent = 'Export CSV';
+      lcExportBtn.addEventListener('click', exportMonthlyCsv);
+      lcFooter.appendChild(lcExportBtn);
+      lc.appendChild(lcFooter);
+    }
+
+    // ── Render: issues tab ───────────────────────────────────────────────────
+    function renderIssues() {
+      const data = dashboardData;
+      if (!data) return;
+      const tbody = document.querySelector('#issues-table tbody');
+      tbody.innerHTML = '';
+      const issuesRaw = data.cluster_descriptions || [];
+      if (!issuesRaw.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:#6f6f6f;text-align:center;padding:24px">No cluster description data — run cluster_csp.py first</td></tr>';
+        return;
+      }
+
+      const selectedRelease  = document.getElementById('issues-release-select')?.value  || '__all__';
+      const selectedCategory = document.getElementById('issues-category-select')?.value || '__all__';
+      const selectedSubcat   = document.getElementById('issues-subcategory-select')?.value || '__all__';
+      const { from: isFrom, to: isTo } = getDateRange('issues-date-range-select', 'issues-date-from', 'issues-date-to');
+      const hasDateFilter  = !!(isFrom || isTo);
+      const hasRawRows = Object.values(data.raw_rows_by_category || {}).some(r => r.length > 0);
+      const subcatCol = selectedCategory !== '__all__' ? `${selectedCategory} Subcategory` : null;
+
+      // When any filter is active, re-derive counts from raw rows (or pre-aggregated data).
+      let issuesFiltered;
+      if (!hasDateFilter && selectedRelease === '__all__' && selectedCategory === '__all__') {
+        issuesFiltered = issuesRaw;
+      } else if (hasRawRows) {
+        // Derive from raw rows — supports date, release, category, and subcategory filters
+        const countByDesc = {};
+        const seen = new Set();
+        // Iterate only the selected category's rows, or all categories if none selected
+        const catEntries = selectedCategory !== '__all__'
+          ? [[selectedCategory, (data.raw_rows_by_category || {})[selectedCategory] || []]]
+          : Object.entries(data.raw_rows_by_category || {});
+        catEntries.forEach(([, catRows]) => {
+          filterRowsByDate(catRows, isFrom, isTo).forEach(r => {
+            const key = r['Case Number'] || JSON.stringify(r);
+            if (seen.has(key)) return;
+            if (selectedRelease !== '__all__') {
+              if (normaliseRel(r[data.release_column]) !== selectedRelease) return;
+            }
+            if (subcatCol && selectedSubcat !== '__all__') {
+              if ((r[subcatCol] || '').trim() !== selectedSubcat) return;
+            }
+            seen.add(key);
+            const desc = (r['Cluster Description'] || '').trim();
+            if (desc) countByDesc[desc] = (countByDesc[desc] || 0) + 1;
+          });
+        });
+        issuesFiltered = issuesRaw
+          .map(i => ({ description: i.description, count: countByDesc[i.description] || 0 }))
+          .filter(i => i.count > 0);
+      } else {
+        // Public JSON — no date/category filtering possible; fall back to release filter only
+        const countByDesc = {};
+        (data.release_by_cluster || [])
+          .filter(r => selectedRelease === '__all__' || r.release === selectedRelease)
+          .forEach(r => { countByDesc[r.description] = (countByDesc[r.description] || 0) + r.count; });
+        issuesFiltered = issuesRaw
+          .map(i => ({ description: i.description, count: countByDesc[i.description] || 0 }))
+          .filter(i => i.count > 0);
+      }
+
+      // Re-sort: classified desc by count, unclassified at bottom (only when filtered)
+      if (issuesFiltered !== issuesRaw) {
+        issuesFiltered = [
+          ...issuesFiltered.filter(i => !i.description.toLowerCase().startsWith('unclassified')).sort((a,b) => b.count - a.count),
+          ...issuesFiltered.filter(i =>  i.description.toLowerCase().startsWith('unclassified')),
+        ];
+      }
+
+      // Apply search filter
+      const searchTerm = (document.getElementById('issues-search')?.value || '').trim().toLowerCase();
+      const issuesSearched = searchTerm
+        ? issuesFiltered.filter(i => i.description.toLowerCase().includes(searchTerm))
+        : issuesFiltered;
+
+      // Pin noise/unclassified to the bottom
+      const issues = [
+        ...issuesSearched.filter(i => !i.description.toLowerCase().startsWith('unclassified')),
+        ...issuesSearched.filter(i =>  i.description.toLowerCase().startsWith('unclassified')),
+      ];
+
+      // Wire export button to current filtered list
+      const exportBtn = document.getElementById('issues-export-btn');
+      exportBtn.onclick = () => {
+        if (!issues.length) return;
+        const lines = ['Cluster Description,Cases'];
+        issues.forEach(i => lines.push(`${csvCell(i.description)},${i.count}`));
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = 'issues.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      if (!issues.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:#6f6f6f;text-align:center;padding:24px">No issues match "${searchTerm}"</td></tr>`;
+        return;
+      }
+
+      const maxV = issues.find(i => !i.description.toLowerCase().startsWith('unclassified'))?.count || issues[0]?.count || 1;
+      issues.forEach((item, i) => {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.innerHTML = `
+          <td style="color:#6f6f6f;white-space:nowrap">${i + 1}</td>
+          <td>${item.description}</td>
+          <td><strong>${item.count}</strong></td>
+          <td>
+            <div class="acct-bar-track"><div class="acct-bar-fill" style="width:${(item.count / maxV * 100).toFixed(1)}%;background-color:#0f62fe"></div></div>
+          </td>`;
+        tr.addEventListener('click', () => {
+          // Remove any existing expansion row
+          const existing = tbody.querySelector('tr.cluster-expansion');
+          if (existing) existing.remove();
+          // If clicking the already-highlighted row, just collapse
+          const wasSelected = tr.dataset.selected === '1';
+          tbody.querySelectorAll('tr').forEach(r => { r.style.background = ''; r.dataset.selected = ''; });
+          if (wasSelected) return;
+          tr.style.background = '#e8f0fe';
+          tr.dataset.selected = '1';
+          renderClusterDrilldown(item.description, tr);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ── Render: cluster drilldown (By Issue → By Release chart) ──────────────
+    function renderClusterDrilldown(description, afterRow) {
+      if (!dashboardData) return;
+
+      const hasRawRows = Object.values(dashboardData.raw_rows_by_category || {}).some(r => r.length > 0);
+      const { from: isFrom, to: isTo } = getDateRange('issues-date-range-select', 'issues-date-from', 'issues-date-to');
+      const selectedRelease  = document.getElementById('issues-release-select')?.value  || '__all__';
+      const selectedCategory = document.getElementById('issues-category-select')?.value || '__all__';
+      const selectedSubcat   = document.getElementById('issues-subcategory-select')?.value || '__all__';
+      const subcatCol        = selectedCategory !== '__all__' ? `${selectedCategory} Subcategory` : null;
+
+      // ── Build summary rows filtered by the active By Issue filters ─────────────
+      const summaryRows = [];
+      let relCounts;
+
+      if (hasRawRows) {
+        const seen = new Set();
+        const counts = {};
+        const catEntries = selectedCategory !== '__all__'
+          ? [[selectedCategory, (dashboardData.raw_rows_by_category || {})[selectedCategory] || []]]
+          : Object.entries(dashboardData.raw_rows_by_category || {});
+
+        catEntries.forEach(([, catRows]) => {
+          filterRowsByDate(catRows, isFrom, isTo).forEach(r => {
+            const key = r['Case Number'] || JSON.stringify(r);
+            if (seen.has(key)) return;
+            if ((r['Cluster Description'] || '').trim() !== description) return;
+            if (selectedRelease !== '__all__') {
+              if (normaliseRel(r[dashboardData.release_column]) !== selectedRelease) return;
+            }
+            if (subcatCol && selectedSubcat !== '__all__') {
+              if ((r[subcatCol] || '').trim() !== selectedSubcat) return;
+            }
+            seen.add(key);
+            summaryRows.push(r);
+            const _rel = normaliseRel(r[dashboardData.release_column]);
+            counts[_rel] = (counts[_rel] || 0) + 1;
+          });
+        });
+        relCounts = counts;
+      } else {
+        // Use pre-aggregated release_by_cluster
+        relCounts = Object.fromEntries(
+          (dashboardData.release_by_cluster || [])
+            .filter(r => r.description === description && (selectedRelease === '__all__' || r.release === selectedRelease))
+            .map(r => [r.release, r.count])
+        );
+      }
+
+      const bars = allReleases.map(release => ({ release, count: relCounts[release] ?? 0 }));
+      const total = bars.reduce((s, b) => s + b.count, 0);
+
+      // Insert expansion row directly after the clicked row
+      const expansionTr = document.createElement('tr');
+      expansionTr.className = 'cluster-expansion';
+      expansionTr.style.background = '#f4f7fe';
+      const expansionTd = document.createElement('td');
+      expansionTd.colSpan = 4;
+      expansionTd.style.padding = '0.75rem 1rem 1rem';
+      expansionTr.appendChild(expansionTd);
+      afterRow.insertAdjacentElement('afterend', expansionTr);
+
+      // ── Summary panel ────────────────────────────────────────────────────────
+      if (summaryRows.length) {
+        const acctCounts = {}, verCounts = {}, statusCounts = {};
+        let earliest = null, latest = null;
+        summaryRows.forEach(r => {
+          const acct   = (r['Account Name: Account Name'] || r['Account Name'] || '').replace(/^Account Name:\s*/i, '').trim();
+          const ver    = (r['Product Version'] || 'Unknown').trim();
+          const status = (r['Status'] || '').trim();
+          if (acct)   acctCounts[acct]     = (acctCounts[acct]   || 0) + 1;
+          if (ver)    verCounts[ver]        = (verCounts[ver]     || 0) + 1;
+          if (status) statusCounts[status]  = (statusCounts[status] || 0) + 1;
+          const raw = r['Date/Time Opened'];
+          if (raw) {
+            const d = new Date(raw);
+            if (!isNaN(d)) {
+              if (!earliest || d < earliest) earliest = d;
+              if (!latest   || d > latest)   latest   = d;
+            }
+          }
+        });
+
+        const topAccounts = Object.entries(acctCounts).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        const topVersions = Object.entries(verCounts).sort((a,b) => b[1]-a[1]);
+        const topStatuses = Object.entries(statusCounts).sort((a,b) => b[1]-a[1]);
+
+        // Pick a representative resolution note — prefer a non-IBM-CORP closed case with a substantive comment
+        let resolutionNote = '';
+        const candidates = summaryRows
+          .filter(r => {
+            const acct = (r['Account Name: Account Name'] || '').toLowerCase();
+            const st   = (r['Status'] || '').toLowerCase();
+            return !acct.includes('ibm corp') && (st.includes('closed') || st.includes('cancelled'));
+          })
+          .concat(summaryRows); // fallback to any row
+        for (const r of candidates) {
+          const c = (r['Comments'] || '').trim();
+          // Look for a comment that contains "Action taken" or similar resolution markers
+          const actionIdx = c.search(/action taken|resolution|root cause|what we found|fix|workaround/i);
+          if (actionIdx !== -1) {
+            const snippet = c.slice(actionIdx, actionIdx + 500).split('|')[0].trim();
+            if (snippet.length > 40) { resolutionNote = snippet; break; }
+          }
+        }
+
+        const fmtDate = d => d ? d.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : '—';
+
+        const summaryDiv = document.createElement('div');
+        summaryDiv.style.cssText = 'background:#fff;border:1px solid #e0e0e0;border-top:3px solid #6929c4;padding:16px 20px;margin-bottom:8px;font-size:13px;line-height:1.6';
+
+        const pill = (label, val) =>
+          `<span style="display:inline-flex;align-items:center;gap:4px;background:#f4f4f4;border:1px solid #e0e0e0;border-radius:2px;padding:2px 8px;margin:2px 4px 2px 0;white-space:nowrap">
+            <span style="color:#6f6f6f">${label}</span>
+            <strong style="color:#161616">${val}</strong>
+          </span>`;
+
+        const acctPills = topAccounts.map(([a, n]) => pill(a, n)).join('');
+        const verPills  = topVersions.map(([v, n]) => pill(v, n)).join('');
+        const stPills   = topStatuses.map(([s, n]) => pill(s, n)).join('');
+
+        const uniqueCustomerCount = Object.keys(acctCounts).filter(a => a && a !== 'Unknown' && a !== 'nan').length;
+
+        summaryDiv.innerHTML = `
+          <div style="font-weight:600;color:#161616;margin-bottom:10px;font-size:13px">Issue Summary</div>
+          <div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:12px">
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cases</div>
+              <div style="font-size:22px;font-weight:300;color:#6929c4">${summaryRows.length}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Unique Customers</div>
+              <div style="font-size:22px;font-weight:300;color:#0f62fe">${uniqueCustomerCount}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Date Range</div>
+              <div style="font-size:14px;line-height:2">${fmtDate(earliest)} – ${fmtDate(latest)}</div>
+            </div>
+          </div>
+          <div style="margin-bottom:8px">
+            <span style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px">Top Accounts</span><br>
+            ${acctPills}
+          </div>
+          <div style="margin-bottom:8px">
+            <span style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px">Product Versions</span><br>
+            ${verPills}
+          </div>
+          <div style="margin-bottom:${resolutionNote ? '12' : '0'}px">
+            <span style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px">Status</span><br>
+            ${stPills}
+          </div>
+          ${resolutionNote ? `
+          <div style="border-top:1px solid #e0e0e0;padding-top:10px;margin-top:4px">
+            <span style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px">Resolution Note</span>
+            <div style="margin-top:4px;color:#161616;font-style:italic">"${resolutionNote.replace(/"/g, '&quot;').replace(/</g, '&lt;')}"</div>
+          </div>` : ''}`;
+
+        // Check for a pre-baked summary from the pipeline
+        const bakedSummary = (dashboardData.cluster_summaries || {})[description];
+        if (bakedSummary) {
+          const bakedDiv = document.createElement('div');
+          bakedDiv.style.cssText = 'border-top:1px solid #e0e0e0;padding-top:10px;margin-top:4px';
+          bakedDiv.innerHTML = `
+            <div style="font-size:11px;font-weight:600;color:#6f6f6f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+              AI Summary <span style="font-weight:400;color:#a8a8a8;text-transform:none;letter-spacing:0">· generated by pipeline</span>
+            </div>
+            <div style="font-size:13px;line-height:1.7;color:#161616;white-space:pre-wrap">${bakedSummary.replace(/</g, '&lt;')}</div>`;
+          summaryDiv.appendChild(bakedDiv);
+        }
+
+        expansionTd.appendChild(summaryDiv);
+      }
+
+      if (!total) {
+        expansionTd.insertAdjacentHTML('beforeend', '<p style="color:#6f6f6f;font-size:13px;margin:0">No release data for this cluster.</p>');
+        return;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'chart-card';
+      card.style.borderTop = '3px solid #0f62fe';
+      card.style.margin = '0';
+      expansionTd.appendChild(card);
+
+      drawHBar(
+        card, bars,
+        `Cases by Fusion release — <span style="font-weight:400;font-size:13px">${description.length > 100 ? description.slice(0, 100) + '…' : description}</span>`,
+        `${bars.filter(b => b.count > 0).length} versions · ${total} total`,
+        () => {
+          // Export full case rows for this cluster — same logic as Export Data tab,
+          // filtered to matching Cluster Description, feed columns always excluded.
+          if (!dashboardData) return;
+
+          const EXCEL_CELL_MAX = 32767;
+          const EXCEL_LINE_MAX = 32767;
+          const sanitise = v => String(v == null ? '' : v)
+            .replace(/\r\n|\r|\n/g, ' ')
+            .replace(/"/g, "'");
+          const wrap = s => `"${s}"`;
+
+          // Collect deduplicated raw rows matching this cluster
+          const seen = new Set();
+          const rows = [];
+          Object.values(dashboardData.raw_rows_by_category || {}).forEach(catRows => {
+            catRows.forEach(r => {
+              if ((r['Cluster Description'] || '').trim() !== description) return;
+              const key = r['Case Number'] || JSON.stringify(r);
+              if (!seen.has(key)) { seen.add(key); rows.push(r); }
+            });
+          });
+
+          if (!rows.length) { alert('No raw case rows available for this cluster. Load the nofeed or full JSON.'); return; }
+
+          const allCols = dashboardData.columns || Object.keys(rows[0]);
+          const cols = allCols.filter(c => c !== 'Comments' && c !== 'Body');
+
+          let truncatedCells = 0;
+          const lines = [cols.map(c => wrap(sanitise(c))).join(',')];
+          rows.forEach(r => {
+            const cells = cols.map(c => {
+              let s = sanitise(r[c]);
+              if (s.length > EXCEL_CELL_MAX) { s = s.slice(0, EXCEL_CELL_MAX); truncatedCells++; }
+              return s;
+            });
+            let wrapped = cells.map(wrap);
+            let line = wrapped.join(',');
+            while (line.length > EXCEL_LINE_MAX) {
+              let worstIdx = 0;
+              for (let i = 1; i < wrapped.length; i++) {
+                if (wrapped[i].length > wrapped[worstIdx].length) worstIdx = i;
+              }
+              const excess = line.length - EXCEL_LINE_MAX;
+              const newInner = cells[worstIdx].slice(0, Math.max(0, cells[worstIdx].length - excess - 1));
+              if (newInner.length < cells[worstIdx].length) truncatedCells++;
+              else break;
+              cells[worstIdx]   = newInner;
+              wrapped[worstIdx] = wrap(newInner);
+              line = wrapped.join(',');
+            }
+            lines.push(line);
+          });
+
+          const slug = description.slice(0, 40).replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+          const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href     = url;
+          a.download = `cluster-${slug}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          if (truncatedCells > 0) {
+            alert(`${truncatedCells} cell${truncatedCells === 1 ? '' : 's'} truncated for Excel compatibility (32,767 char limit).`);
+          }
+        }
+      );
+    }
+
+    // ── Render: accounts tab ──────────────────────────────────────────────────
+    function renderAccounts() {
+      const data = dashboardData;
+      if (!data) return;
+      const tbody = document.querySelector('#accounts-table tbody');
+      tbody.innerHTML = '';
+      const byRelContainer = document.getElementById('accounts-by-release-container');
+      byRelContainer.innerHTML = '';
+      const drillContainer = document.getElementById('account-drill-chart');
+      if (drillContainer) drillContainer.innerHTML = '';
+
+      const { from: acFrom, to: acTo } = getDateRange(
+        'accounts-date-range-select', 'accounts-date-from', 'accounts-date-to'
+      );
+      const selectedRelease = document.getElementById('accounts-release-select')?.value || '__all__';
+      const hasRawRows = Object.values(data.raw_rows_by_category || {}).some(r => r.length > 0);
+
+      function normaliseRelease(r) {
+        return normaliseRel(r[data.release_column]);
+      }
+
+      // Stub — overwritten by the table block below; called by chart toggle handlers
+      let rebuildAccountsTable = () => {};
+
+      // ── Deduplicate all rows once — shared by chart and table ─────────────
+      let allDedupedRows = [];
+      if (hasRawRows) {
+        const seen = new Set();
+        Object.values(data.raw_rows_by_category || {}).forEach(catRows => {
+          catRows.forEach(r => {
+            const key = r['Case Number'] || JSON.stringify(r);
+            if (!seen.has(key)) { seen.add(key); allDedupedRows.push(r); }
+          });
+        });
+      }
+      let dedupedRows = filterRowsByDate(allDedupedRows, acFrom, acTo);
+
+      // ── Per-account first release map (lowest non-Unknown version) ────────
+      // accountFirstRelease: { accountName → '2.12' }
+      const accountFirstRelease = {};
+      if (hasRawRows) {
+        dedupedRows.forEach(r => {
+          const rel  = normaliseRelease(r);
+          if (rel === 'Unknown') return;
+          const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+          if (!name || name === 'Unknown' || name === 'nan') return;
+          if (!accountFirstRelease[name] || compareNatural(rel, accountFirstRelease[name]) < 0) {
+            accountFirstRelease[name] = rel;
+          }
+        });
+      }
+
+      // ── Unique customers per release — vertical bar chart ─────────────────
+      if (hasRawRows) {
+        // Build: release → Set of unique account names  (current-release view)
+        const releaseAccounts = {};
+        dedupedRows.forEach(r => {
+          const rel  = normaliseRelease(r);
+          const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+          if (!name || name === 'Unknown' || name === 'nan') return;
+          if (!releaseAccounts[rel]) releaseAccounts[rel] = new Set();
+          releaseAccounts[rel].add(name);
+        });
+
+        // Build: first-release → Set of account names  (first-release view)
+        const firstReleaseAccounts = {};
+        Object.entries(accountFirstRelease).forEach(([name, rel]) => {
+          if (!firstReleaseAccounts[rel]) firstReleaseAccounts[rel] = new Set();
+          firstReleaseAccounts[rel].add(name);
+        });
+
+        function buildRelRows(buckets) {
+          return Object.entries(buckets)
+            .map(([rel, names]) => ({ rel, count: names.size }))
+            .sort((a, b) => {
+              if (a.rel === 'Unknown') return -1;
+              if (b.rel === 'Unknown') return 1;
+              return compareNatural(a.rel, b.rel);
+            });
+        }
+
+        const relRowsAll   = buildRelRows(releaseAccounts);
+        const relRowsFirst = buildRelRows(firstReleaseAccounts);
+
+        function drawRelChart(rows, subtitle) {
+          if (!rows.length) return;
+          const NS    = 'http://www.w3.org/2000/svg';
+          const PAD   = { top: 24, right: 16, bottom: 48, left: 36 };
+          const BAR_W = 36, BAR_GAP = 12;
+          const chartW = rows.length * (BAR_W + BAR_GAP) - BAR_GAP;
+          const W  = Math.max(chartW + PAD.left + PAD.right, 300);
+          const H  = 220;
+          const PH = H - PAD.top - PAD.bottom;
+          const maxV = Math.max(...rows.map(r => r.count));
+
+          const svg = document.createElementNS(NS, 'svg');
+          svg.setAttribute('width', W);
+          svg.setAttribute('height', H);
+          svg.style.display = 'block';
+
+          for (let i = 0; i <= 4; i++) {
+            const val = Math.round(maxV * i / 4);
+            const y   = PAD.top + PH - (PH * i / 4);
+            const line = document.createElementNS(NS, 'line');
+            line.setAttribute('x1', PAD.left); line.setAttribute('x2', W - PAD.right);
+            line.setAttribute('y1', y);        line.setAttribute('y2', y);
+            line.setAttribute('stroke', i === 0 ? '#161616' : '#e0e0e0');
+            svg.appendChild(line);
+            const lbl = document.createElementNS(NS, 'text');
+            lbl.setAttribute('x', PAD.left - 4); lbl.setAttribute('y', y + 4);
+            lbl.setAttribute('text-anchor', 'end');
+            lbl.setAttribute('font-size', '11'); lbl.setAttribute('fill', '#6f6f6f');
+            lbl.textContent = val;
+            svg.appendChild(lbl);
+          }
+
+          rows.forEach(({ rel, count }, i) => {
+            const barH = maxV > 0 ? Math.round(PH * count / maxV) : 0;
+            const x    = PAD.left + i * (BAR_W + BAR_GAP);
+            const y    = PAD.top + PH - barH;
+            const rect = document.createElementNS(NS, 'rect');
+            rect.setAttribute('x', x); rect.setAttribute('y', y);
+            rect.setAttribute('width', BAR_W); rect.setAttribute('height', Math.max(barH, 1));
+            rect.setAttribute('fill', '#0f62fe');
+            svg.appendChild(rect);
+            const cnt = document.createElementNS(NS, 'text');
+            cnt.setAttribute('x', x + BAR_W / 2); cnt.setAttribute('y', y - 4);
+            cnt.setAttribute('text-anchor', 'middle');
+            cnt.setAttribute('font-size', '12'); cnt.setAttribute('font-weight', '600');
+            cnt.setAttribute('fill', '#161616');
+            cnt.textContent = count;
+            svg.appendChild(cnt);
+            const xlbl = document.createElementNS(NS, 'text');
+            xlbl.setAttribute('x', x + BAR_W / 2);
+            xlbl.setAttribute('y', PAD.top + PH + 16);
+            xlbl.setAttribute('text-anchor', 'middle');
+            xlbl.setAttribute('font-size', '11'); xlbl.setAttribute('fill', '#161616');
+            xlbl.textContent = rel;
+            svg.appendChild(xlbl);
+          });
+          return svg;
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'chart-card';
+        wrap.style.cssText = 'border-top:3px solid #0f62fe;margin-bottom:0';
+
+        const HELP = {
+          all:   'Each account is counted once per release in which they reported an issue.',
+          first: 'Each account is counted only against the earliest release in which they reported an issue.',
+        };
+
+        // Header with title + toggle
+        const hdr = document.createElement('div');
+        hdr.className = 'overview-card-header';
+        hdr.style.cssText = 'margin-bottom:0.5rem;align-items:center';
+        hdr.innerHTML = `
+          <span class="overview-card-title">Accounts by release</span>
+          <div style="display:flex;gap:0;border:1px solid #0f62fe;border-radius:2px;overflow:hidden;font-size:12px">
+            <button id="acct-toggle-all"   style="padding:4px 12px;border:none;cursor:pointer;background:${accountsChartMode==='all'   ? '#0f62fe' : '#fff'};color:${accountsChartMode==='all'   ? '#fff' : '#0f62fe'}">All cases</button>
+            <button id="acct-toggle-first" style="padding:4px 12px;border:none;cursor:pointer;background:${accountsChartMode==='first' ? '#0f62fe' : '#fff'};color:${accountsChartMode==='first' ? '#fff' : '#0f62fe'}">First release</button>
+          </div>`;
+        wrap.appendChild(hdr);
+
+        const helpEl = document.createElement('div');
+        helpEl.id = 'acct-help-text';
+        helpEl.style.cssText = 'font-size:12px;color:#525252;margin-bottom:0.75rem';
+        helpEl.textContent = HELP[accountsChartMode];
+        wrap.appendChild(helpEl);
+
+        const scroller = document.createElement('div');
+        scroller.style.cssText = 'overflow-x:auto';
+        wrap.appendChild(scroller);
+        byRelContainer.appendChild(wrap);
+
+        function applyChart() {
+          scroller.innerHTML = '';
+          const rows = accountsChartMode === 'first' ? relRowsFirst : relRowsAll;
+          const svg  = drawRelChart(rows);
+          if (svg) scroller.appendChild(svg);
+        }
+        applyChart();
+
+        hdr.querySelector('#acct-toggle-all').addEventListener('click', () => {
+          accountsChartMode = 'all';
+          hdr.querySelector('#acct-toggle-all').style.background   = '#0f62fe';
+          hdr.querySelector('#acct-toggle-all').style.color        = '#fff';
+          hdr.querySelector('#acct-toggle-first').style.background = '#fff';
+          hdr.querySelector('#acct-toggle-first').style.color      = '#0f62fe';
+          helpEl.textContent = HELP.all;
+          applyChart();
+          rebuildAccountsTable();
+        });
+        hdr.querySelector('#acct-toggle-first').addEventListener('click', () => {
+          accountsChartMode = 'first';
+          hdr.querySelector('#acct-toggle-first').style.background = '#0f62fe';
+          hdr.querySelector('#acct-toggle-first').style.color      = '#fff';
+          hdr.querySelector('#acct-toggle-all').style.background   = '#fff';
+          hdr.querySelector('#acct-toggle-all').style.color        = '#0f62fe';
+          helpEl.textContent = HELP.first;
+          applyChart();
+          rebuildAccountsTable();
+        });
+      }
+
+      // ── Accounts table ────────────────────────────────────────────────────
+      let accounts;
+      if (hasRawRows) {
+        let filtered = dedupedRows;
+        if (selectedRelease !== '__all__') {
+          filtered = accountsChartMode === 'first'
+            ? filtered.filter(r => {
+                const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+                return accountFirstRelease[name] === selectedRelease;
+              })
+            : filtered.filter(r => normaliseRelease(r) === selectedRelease);
+        }
+        const counts = {};
+        filtered.forEach(r => {
+          const name = (r['Account Name'] || r['Account Name: Account Name'] || 'Unknown').trim();
+          counts[name] = (counts[name] || 0) + 1;
+        });
+        accounts = Object.entries(counts)
+          .map(([account_name, count]) => ({ account_name, count,
+            firstRelease: accountFirstRelease[account_name] || '—' }))
+          .sort((a, b) => b.count - a.count);
+      } else {
+        // Public JSON — use pre-aggregated monthly account data (no release filter available)
+        const filtered = filterMonthlyRecords(data.monthly_top_accounts || [], acFrom, acTo);
+        const counts = {};
+        filtered.forEach(r => { counts[r.account_name] = (counts[r.account_name] || 0) + r.count; });
+        accounts = Object.entries(counts)
+          .map(([account_name, count]) => ({ account_name, count }))
+          .sort((a, b) => b.count - a.count);
+      }
+
+      // Apply search filter
+      const accountSearch = (document.getElementById('accounts-search')?.value || '').trim().toLowerCase();
+      if (accountSearch) {
+        accounts = accounts.filter(a => a.account_name.toLowerCase().includes(accountSearch));
+      }
+
+      const PAGE_SIZE = 10;
+      const maxV = accounts[0]?.count || 1;
+      document.getElementById('accounts-table-header').textContent =
+        accounts.length ? accounts.length : '—';
+      const pagination = document.getElementById('accounts-pagination');
+      const prevBtn    = document.getElementById('accounts-prev');
+      const nextBtn    = document.getElementById('accounts-next');
+      const pageLabel  = document.getElementById('accounts-page-label');
+      const thFirst    = document.getElementById('accounts-th-first');
+      let currentPage  = 0;
+
+      // Show/hide "First release" column based on mode
+      thFirst.style.display = accountsChartMode === 'first' ? '' : 'none';
+
+      // ── Per-account release breakdown (for drill chart) ───────────────────
+      // relsByAccount: { accountName → { release → ticketCount } }
+      const relsByAccount = {};
+      if (hasRawRows) {
+        allDedupedRows.forEach(r => {
+          const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+          if (!name || name === 'Unknown' || name === 'nan') return;
+          const rel = normaliseRelease(r);
+          if (!relsByAccount[name]) relsByAccount[name] = {};
+          relsByAccount[name][rel] = (relsByAccount[name][rel] || 0) + 1;
+        });
+      }
+
+      // ── Per-account drill chart ───────────────────────────────────────────
+      let selectedAccountName = null;
+
+      function drawAccountDrillChart(accountName) {
+        drillContainer.innerHTML = '';
+        if (!accountName || !relsByAccount[accountName]) return;
+
+        const relCounts = relsByAccount[accountName];
+        const rows = Object.entries(relCounts)
+          .map(([rel, count]) => ({ rel, count }))
+          .sort((a, b) => {
+            if (a.rel === 'Unknown') return -1;
+            if (b.rel === 'Unknown') return 1;
+            return compareNatural(a.rel, b.rel);
+          });
+
+        const wrap = document.createElement('div');
+        wrap.className = 'chart-card';
+        wrap.style.cssText = 'border-top:3px solid #0f62fe';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'overview-card-header';
+        hdr.style.cssText = 'margin-bottom:0.5rem;align-items:center';
+        const totalCases = relsByAccount[accountName] ? Object.values(relsByAccount[accountName]).reduce((s,v)=>s+v,0) : 0;
+        hdr.innerHTML = `
+          <span class="overview-card-title">Tickets by release (all dates) — <strong>${accountName}</strong></span>
+          <span class="overview-card-count">${totalCases} cases</span>`;
+        wrap.appendChild(hdr);
+
+        const NS    = 'http://www.w3.org/2000/svg';
+        const PAD   = { top: 24, right: 16, bottom: 48, left: 36 };
+        const BAR_W = 36, BAR_GAP = 12;
+        const chartW = rows.length * (BAR_W + BAR_GAP) - BAR_GAP;
+        const W  = Math.max(chartW + PAD.left + PAD.right, 300);
+        const H  = 220;
+        const PH = H - PAD.top - PAD.bottom;
+        const maxVal = Math.max(...rows.map(r => r.count));
+
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('width', W);
+        svg.setAttribute('height', H);
+        svg.style.display = 'block';
+
+        for (let i = 0; i <= 4; i++) {
+          const val = Math.round(maxVal * i / 4);
+          const y   = PAD.top + PH - (PH * i / 4);
+          const line = document.createElementNS(NS, 'line');
+          line.setAttribute('x1', PAD.left); line.setAttribute('x2', W - PAD.right);
+          line.setAttribute('y1', y);        line.setAttribute('y2', y);
+          line.setAttribute('stroke', i === 0 ? '#161616' : '#e0e0e0');
+          svg.appendChild(line);
+          const lbl = document.createElementNS(NS, 'text');
+          lbl.setAttribute('x', PAD.left - 4); lbl.setAttribute('y', y + 4);
+          lbl.setAttribute('text-anchor', 'end');
+          lbl.setAttribute('font-size', '11'); lbl.setAttribute('fill', '#6f6f6f');
+          lbl.textContent = val;
+          svg.appendChild(lbl);
+        }
+
+        rows.forEach(({ rel, count }, i) => {
+          const barH = maxVal > 0 ? Math.round(PH * count / maxVal) : 0;
+          const x    = PAD.left + i * (BAR_W + BAR_GAP);
+          const y    = PAD.top + PH - barH;
+          const rect = document.createElementNS(NS, 'rect');
+          rect.setAttribute('x', x); rect.setAttribute('y', y);
+          rect.setAttribute('width', BAR_W); rect.setAttribute('height', Math.max(barH, 1));
+          rect.setAttribute('fill', '#0f62fe');
+          svg.appendChild(rect);
+          const cnt = document.createElementNS(NS, 'text');
+          cnt.setAttribute('x', x + BAR_W / 2); cnt.setAttribute('y', y - 4);
+          cnt.setAttribute('text-anchor', 'middle');
+          cnt.setAttribute('font-size', '12'); cnt.setAttribute('font-weight', '600');
+          cnt.setAttribute('fill', '#161616');
+          cnt.textContent = count;
+          svg.appendChild(cnt);
+          const xlbl = document.createElementNS(NS, 'text');
+          xlbl.setAttribute('x', x + BAR_W / 2);
+          xlbl.setAttribute('y', PAD.top + PH + 16);
+          xlbl.setAttribute('text-anchor', 'middle');
+          xlbl.setAttribute('font-size', '11'); xlbl.setAttribute('fill', '#161616');
+          xlbl.textContent = rel;
+          svg.appendChild(xlbl);
+        });
+
+        const scroller = document.createElement('div');
+        scroller.style.cssText = 'overflow-x:auto';
+        scroller.appendChild(svg);
+        wrap.appendChild(scroller);
+
+        // ── Summary: category breakdown + cluster issues ──────────────────────
+        const acctRowsForSummary = dedupedRows.filter(r => {
+          const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+          return name === accountName;
+        });
+        if (acctRowsForSummary.length) {
+          // Category counts — walk raw_rows_by_category filtered by selected date range
+          const catCounts = {};
+          Object.entries(dashboardData.raw_rows_by_category || {}).forEach(([cat, catRows]) => {
+            const filteredCatRows = filterRowsByDate(catRows, acFrom, acTo);
+            const seen = new Set();
+            filteredCatRows.forEach(r => {
+              const name = (r['Account Name'] || r['Account Name: Account Name'] || '').trim();
+              if (name !== accountName) return;
+              const key = r['Case Number'] || JSON.stringify(r);
+              if (!seen.has(key)) { seen.add(key); catCounts[cat] = (catCounts[cat] || 0) + 1; }
+            });
+          });
+          const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+          if (catEntries.length) {
+            const catMaxV = catEntries[0][1];
+            const catSection = document.createElement('div');
+            catSection.style.cssText = 'margin-top:1.5rem;border-top:3px solid #0f62fe';
+            const catHdr = document.createElement('div');
+            catHdr.className = 'overview-card-header';
+            catHdr.style.cssText = 'margin-bottom:0.5rem;align-items:center';
+            catHdr.innerHTML = `
+              <span class="overview-card-title">By category (selected date range)</span>
+              <span class="overview-card-count">${acctRowsForSummary.length} cases</span>`;
+            catSection.appendChild(catHdr);
+
+            const catTable = document.createElement('table');
+            catTable.className = 'cds--data-table';
+            catTable.style.cssText = 'width:100%';
+            catTable.innerHTML = '<thead><tr><th>#</th><th>Category</th><th>Cases</th><th></th></tr></thead>';
+            const catTbody = document.createElement('tbody');
+            catEntries.forEach(([cat, count], i) => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td style="color:#6f6f6f">${i + 1}</td>
+                <td>${cat}</td>
+                <td><strong>${count}</strong></td>
+                <td><div class="acct-bar-track"><div class="acct-bar-fill" style="width:${(count / catMaxV * 100).toFixed(1)}%;background-color:#0f62fe"></div></div></td>`;
+              catTbody.appendChild(tr);
+            });
+            catTable.appendChild(catTbody);
+            catSection.appendChild(catTable);
+            wrap.appendChild(catSection);
+          }
+
+          // Cluster issues — reuse buildIssuesCard
+          const issuesCard = buildIssuesCard(acctRowsForSummary, accountName, false, null);
+          issuesCard.style.marginTop = '1.25rem';
+          issuesCard.querySelector('.overview-card-title').innerHTML =
+            'Issues (selected date range)';
+          wrap.appendChild(issuesCard);
+        }
+
+        // Export button — bottom right, downloads CSV of cases for this account in selected date range
+        const exportCount = acctRowsForSummary.length;
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'cds--btn cds--btn--ghost cds--btn--sm';
+        exportBtn.style.cssText = 'display:block;margin-left:auto;margin-top:0.5rem;white-space:nowrap';
+        exportBtn.textContent = `Export ${exportCount} cases`;
+        exportBtn.disabled = exportCount === 0;
+        exportBtn.addEventListener('click', () => {
+          const acctRows = acctRowsForSummary;
+          if (!acctRows.length) { alert('No rows to export.'); return; }
+          const allCols = (dashboardData.columns || Object.keys(acctRows[0])).filter(c => c !== 'Comments' && c !== 'Body');
+          const CELL_MAX = 32767, LINE_MAX = 32767;
+          const sanitise = v => String(v == null ? '' : v).replace(/\r\n|\r|\n/g, ' ').replace(/"/g, "'");
+          const wrapQ = s => `"${s}"`;
+          const lines = [allCols.map(c => wrapQ(sanitise(c))).join(',')];
+          acctRows.forEach(r => {
+            const cells = allCols.map(c => {
+              let s = sanitise(r[c]);
+              if (s.length > CELL_MAX) s = s.slice(0, CELL_MAX);
+              return s;
+            });
+            let wrapped = cells.map(wrapQ);
+            let line = wrapped.join(',');
+            while (line.length > LINE_MAX) {
+              let worstIdx = 0;
+              for (let i = 1; i < wrapped.length; i++) {
+                if (wrapped[i].length > wrapped[worstIdx].length) worstIdx = i;
+              }
+              const excess = line.length - LINE_MAX;
+              const newInner = cells[worstIdx].slice(0, Math.max(0, cells[worstIdx].length - excess - 1));
+              if (newInner.length >= cells[worstIdx].length) break;
+              cells[worstIdx] = newInner;
+              wrapped[worstIdx] = wrapQ(newInner);
+              line = wrapped.join(',');
+            }
+            lines.push(line);
+          });
+          const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href     = url;
+          a.download = `account-${accountName.replace(/[^a-z0-9]/gi, '_')}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+        wrap.appendChild(exportBtn);
+        drillContainer.appendChild(wrap);
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function renderPage(page) {
+        currentPage = page;
+        tbody.innerHTML = '';
+        const cols = accountsChartMode === 'first' ? 5 : 4;
+        if (!accounts.length) {
+          tbody.innerHTML = `<tr><td colspan="${cols}" style="color:#6f6f6f;text-align:center;padding:24px">No account data</td></tr>`;
+          pagination.style.display = 'none';
+          return;
+        }
+        const totalPages = Math.ceil(accounts.length / PAGE_SIZE);
+        const start = page * PAGE_SIZE;
+        accounts.slice(start, start + PAGE_SIZE).forEach((acct, j) => {
+          const tr = document.createElement('tr');
+          tr.style.cursor = hasRawRows ? 'pointer' : '';
+          if (acct.account_name === selectedAccountName) {
+            tr.style.background = '#e8f0fe';
+          }
+          const firstRelCell = accountsChartMode === 'first'
+            ? `<td>${acct.firstRelease}</td>` : '';
+          tr.innerHTML = `
+            <td style="color:#6f6f6f">${start + j + 1}</td>
+            <td>${acct.account_name}</td>
+            <td><strong>${acct.count}</strong></td>
+            ${firstRelCell}
+            <td>
+              <div class="acct-bar-track"><div class="acct-bar-fill" style="width:${(acct.count / maxV * 100).toFixed(1)}%;background-color:#0f62fe"></div></div>
+            </td>`;
+          if (hasRawRows) {
+            tr.addEventListener('click', () => {
+              if (selectedAccountName === acct.account_name) {
+                // clicking same row again clears the chart
+                selectedAccountName = null;
+                drillContainer.innerHTML = '';
+              } else {
+                selectedAccountName = acct.account_name;
+                drawAccountDrillChart(acct.account_name);
+              }
+              // re-render page to update row highlight
+              renderPage(currentPage);
+            });
+          }
+          tbody.appendChild(tr);
+        });
+        pageLabel.textContent = `Page ${page + 1} of ${totalPages} · ${accounts.length} accounts`;
+        prevBtn.disabled = page === 0;
+        nextBtn.disabled = page >= totalPages - 1;
+        pagination.style.display = accounts.length > PAGE_SIZE ? 'flex' : 'none';
+      }
+
+      rebuildAccountsTable = () => {
+        selectedAccountName = null;
+        drillContainer.innerHTML = '';
+        renderPage(0);
+      };
+
+      prevBtn.onclick = () => renderPage(currentPage - 1);
+      nextBtn.onclick = () => renderPage(currentPage + 1);
+      renderPage(0);
+    }
+
+    // ── Render: export tab ───────────────────────────────────────────────────
+    function renderExport() {
+      if (!dashboardData) return;
+      document.getElementById('export-truncation-note').style.display = 'none';
+      const { from, to } = getDateRange('export-date-range-select', 'export-date-from', 'export-date-to');
+
+      const catVal  = document.getElementById('export-category-select').value;
+      const relVal  = document.getElementById('export-release-select')?.value || '__all__';
+      const allCats = Object.keys(dashboardData.category_counts || {});
+      const selectedCats = catVal === '__all__' ? allCats : [catVal];
+
+      const hasRawRows = Object.values(dashboardData.raw_rows_by_category || {}).some(r => r.length > 0);
+      let count = 0;
+
+      function normaliseReleaseForExport(r) {
+        return normaliseRel(r[dashboardData.release_column]);
+      }
+
+      if (hasRawRows) {
+        // Exact count from raw rows: union of selected categories, deduplicated by Case Number
+        const seen = new Set();
+        selectedCats.forEach(cat => {
+          let rows = filterRowsByDate(
+            (dashboardData.raw_rows_by_category || {})[cat] || [], from, to
+          );
+          if (relVal !== '__all__') rows = rows.filter(r => normaliseReleaseForExport(r) === relVal);
+          rows.forEach(r => { seen.add(r['Case Number'] || JSON.stringify(r)); });
+        });
+        count = seen.size;
+      } else {
+        if (catVal === '__all__') {
+          // Use the deduplicated total series — no double counting
+          const records = filterMonthlyRecords(dashboardData.monthly_counts_total || [], from, to);
+          count = records.reduce((s, r) => s + r.count, 0);
+        } else {
+          const records = filterMonthlyRecords(
+            (dashboardData.monthly_counts_by_category || {})[catVal] || [], from, to
+          );
+          count = records.reduce((s, r) => s + r.count, 0);
+        }
+      }
+
+      const catLabel = catVal === '__all__' ? 'all categories' : catVal;
+      const relLabel = relVal === '__all__' ? '' : ` · ${relVal}`;
+      const dateVal = document.getElementById('export-date-range-select').value;
+      const dateLabelMap = {
+        all: 'all dates', 'ytd': 'this year', '12m': 'last 12 months',
+        '6m': 'last 6 months', '3m': 'last 3 months', '1m': 'last month',
+        '2w': 'last two weeks', '1w': 'last week'
+      };
+      const dateLabel = dateVal === 'custom'
+        ? (() => {
+            const f = document.getElementById('export-date-from').value;
+            const t = document.getElementById('export-date-to').value;
+            return [f, t].filter(Boolean).join(' — ') || 'custom range';
+          })()
+        : (dateLabelMap[dateVal] || 'all dates');
+
+      const includeFeed = document.getElementById('export-include-feed').checked;
+      const feedSuffix  = includeFeed ? ' + case feed data' : '';
+      const btn    = document.getElementById('export-btn');
+      const notice = document.getElementById('export-no-raw-notice');
+
+      // Check whether feed columns are actually present in raw rows
+      const loadedPath   = document.getElementById('data-path').value.trim();
+      const isNoFeed     = loadedPath.includes('-dashboard-nofeed.json') || loadedPath.includes('-dashboard-public.json');
+      const needsFullJson = !hasRawRows || (includeFeed && isNoFeed);
+
+      if (!needsFullJson) {
+        notice.style.display = 'none';
+        btn.textContent = `Export ${count.toLocaleString()} cases — ${catLabel}${relLabel} · ${dateLabel}${feedSuffix}`;
+        btn.style.display = '';
+        btn._exportState  = { from, to, catVal, relVal, includeFeed, count };
+      } else {
+        const fullPath = loadedPath
+          .replace('-dashboard-nofeed.json', '-dashboard.json')
+          .replace('-dashboard-public.json', '-dashboard.json');
+        const msg = includeFeed && isNoFeed
+          ? 'Export with case feed data requires the full dashboard JSON (includes Comments and Description).'
+          : 'Export requires the full dashboard JSON which includes raw case rows.';
+        document.getElementById('export-no-raw-notice').querySelector('div, span, br')?.remove?.();
+        const noticeEl = document.getElementById('export-no-raw-notice');
+        noticeEl.innerHTML = `${msg}<br>Load <strong>${fullPath}</strong> using the <em>Dashboard JSON path</em> panel below.`;
+        notice.style.display = '';
+        btn.style.display    = 'none';
+      }
+    }
+
+    // ── Render: case lookup tab ───────────────────────────────────────────────
+    function renderCaseLookup() {
+      const input  = document.getElementById('case-lookup-input');
+      const btn    = document.getElementById('case-lookup-btn');
+      const result = document.getElementById('case-lookup-result');
+
+      function doLookup() {
+        const query = input.value.trim();
+        result.innerHTML = '';
+        if (!query) return;
+
+        if (!dashboardData) {
+          result.innerHTML = '<p style="color:#6f6f6f;font-size:14px">No dashboard loaded — use the Settings tab to load a dashboard JSON first.</p>';
+          return;
+        }
+
+        // Collect all raw rows across all categories; deduplicate by Case Number
+        const seen = new Set();
+        const matches = [];
+        const allCatRows = Object.values(dashboardData.raw_rows_by_category || {});
+        allCatRows.forEach(catRows => {
+          catRows.forEach(r => {
+            const cn = (r['Case Number'] || r['Case #'] || '').toString().trim();
+            if (!cn) return;
+            if (seen.has(cn)) return;
+            seen.add(cn);
+            if (cn.toLowerCase().includes(query.toLowerCase())) matches.push(r);
+          });
+        });
+
+        if (!matches.length) {
+          result.innerHTML = `<p style="color:#6f6f6f;font-size:14px">No case found matching <strong>${escHtml(query)}</strong>.</p>`;
+          return;
+        }
+
+        matches.forEach(r => {
+          const caseNum = (r['Case Number'] || r['Case #'] || '—').toString().trim();
+          const subject = (r['Subject'] || r['Case Subject'] || r['Title'] || '').trim();
+          const acct    = (r['Account Name: Account Name'] || r['Account Name'] || '').replace(/^Account Name:\s*/i, '').trim();
+          const status  = (r['Status'] || '').trim();
+          const priority= (r['Priority'] || '').trim();
+          const version = (r['Product Version'] || '').trim();
+          const opened  = (() => { const d = new Date(r['Date/Time Opened']); return isNaN(d) ? '' : d.toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}); })();
+          const closed  = (() => { const d = new Date(r['Date/Time Closed'] || r['Closed Date']); return isNaN(d) ? '' : d.toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}); })();
+
+          // Gather categories this case appears in
+          const caseCats = Object.entries(dashboardData.raw_rows_by_category || {})
+            .filter(([, rows]) => rows.some(x => (x['Case Number'] || x['Case #'] || '').toString().trim() === caseNum))
+            .map(([cat]) => cat);
+
+          // Related cases — stored as pipe-delimited, display as comma-separated
+          const relatedCases = (r['Related cases'] || '').trim().split('|').map(s => s.trim()).filter(Boolean).join(', ');
+
+          // Look for a comment/description snippet
+          const comments = (r['Comments'] || r['Description'] || r['Body'] || '').trim();
+          const snippet  = comments.length > 300 ? comments.slice(0, 300).trimEnd() + '…' : comments;
+
+          const card = document.createElement('div');
+          card.style.cssText = 'background:#f7f8fa;border:1px solid #e0e0e0;border-radius:4px;padding:16px 20px;margin-bottom:1rem;max-width:720px';
+
+          const rows = [
+            ['Case number',  escHtml(caseNum)],
+            subject  ? ['Subject',       escHtml(subject)]  : null,
+            acct     ? ['Account',       escHtml(acct)]     : null,
+            status   ? ['Status',        escHtml(status)]   : null,
+            priority ? ['Priority',      escHtml(priority)] : null,
+            version  ? ['Product version', escHtml(version)] : null,
+            opened   ? ['Opened',        escHtml(opened)]   : null,
+            closed   ? ['Closed',        escHtml(closed)]   : null,
+            caseCats.length  ? ['Categories',    caseCats.map(escHtml).join(', ')] : null,
+            relatedCases     ? ['Related cases', escHtml(relatedCases)]            : null,
+            snippet  ? ['Notes',         `<span style="white-space:pre-wrap;font-size:13px;color:#525252">${escHtml(snippet)}</span>`] : null,
+          ].filter(Boolean);
+
+          card.innerHTML = rows.map(([label, value]) =>
+            `<div style="display:flex;gap:12px;padding:4px 0;border-bottom:1px solid #e0e0e0;font-size:14px;line-height:1.5">
+               <span style="min-width:130px;font-weight:600;color:#525252;flex-shrink:0">${label}</span>
+               <span style="color:#161616">${value}</span>
+             </div>`
+          ).join('');
+
+          result.appendChild(card);
+        });
+      }
+
+      // Wire up button + Enter key (once — guard with a flag on the element)
+      if (!btn.dataset.wired) {
+        btn.dataset.wired = '1';
+        btn.addEventListener('click', doLookup);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+      }
+    }
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+    function activateTab(name) {
+      // Sync date range from overview → drilldown when navigating to By Release
+      if (name === 'drilldown') {
+        const overviewVal = document.getElementById('overview-date-range-select').value;
+        document.getElementById('date-range-select').value = overviewVal;
+        // Also sync custom date inputs
+        document.getElementById('drilldown-date-from').value = document.getElementById('overview-date-from').value;
+        document.getElementById('drilldown-date-to').value   = document.getElementById('overview-date-to').value;
+        document.getElementById('drilldown-custom-dates').style.display = overviewVal === 'custom' ? 'flex' : 'none';
+      }
+      document.querySelectorAll('.cds--tabs__nav-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === name);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('active', p.id === `tab-${name}`);
+      });
+      // Keep header gear button highlighted when on settings tab
+      document.getElementById('settings-btn').classList.toggle('active', name === 'settings');
+      if (name === 'drilldown')   renderDrilldown();
+      if (name === 'bymonth')     renderByMonth();
+      if (name === 'accounts')    renderAccounts();
+      if (name === 'export')      renderExport();
+      if (name === 'caselookup')  renderCaseLookup();
+    }
+
+    document.querySelectorAll('.cds--tabs__nav-item').forEach(tab => {
+      tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+    });
+
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      // Make tabs visible even before a dashboard is loaded, so settings are always reachable
+      document.getElementById('main-tabs').style.display = '';
+      activateTab('settings');
+    });
+
+    document.getElementById('category-select').addEventListener('change', () => {
+      const cat  = document.getElementById('category-select').value;
+      const wrap = document.getElementById('subcategory-select-wrap');
+      const sel  = document.getElementById('subcategory-select');
+      // No subcategory filter for All categories view
+      if (cat === '__all__') {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        wrap.style.display = 'none';
+        renderDrilldown();
+        return;
+      }
+      // Collect distinct subcategory values from raw rows for this category
+      const subcats = new Set();
+      const subcatColDD = `${cat} Subcategory`;
+      if (dashboardData) {
+        const catRows = (dashboardData.raw_rows_by_category || {})[cat] || [];
+        catRows.forEach(r => {
+          const v = (r[subcatColDD] || '').trim();
+          if (v) subcats.add(v);
+        });
+      }
+      if (subcats.size > 0) {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        [...subcats].sort().forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sel.appendChild(opt);
+        });
+        wrap.style.display = '';
+      } else {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        wrap.style.display = 'none';
+      }
+      renderDrilldown();
+    });
+    document.getElementById('subcategory-select').addEventListener('change', renderDrilldown);
+    document.getElementById('bymonth-category-select').addEventListener('change', () => {
+      const cat  = document.getElementById('bymonth-category-select').value;
+      const wrap = document.getElementById('bymonth-subcategory-select-wrap');
+      const sel  = document.getElementById('bymonth-subcategory-select');
+      const subcats = new Set();
+      const subcatColBMDD = `${cat} Subcategory`;
+      if (dashboardData) {
+        const catRows = cat === '__all__' ? [] : (dashboardData.raw_rows_by_category || {})[cat] || [];
+        catRows.forEach(r => {
+          const v = (r[subcatColBMDD] || '').trim();
+          if (v) subcats.add(v);
+        });
+      }
+      if (subcats.size > 0) {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        [...subcats].sort().forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sel.appendChild(opt);
+        });
+        wrap.style.display = '';
+      } else {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        wrap.style.display = 'none';
+      }
+      renderByMonth();
+    });
+    document.getElementById('bymonth-subcategory-select').addEventListener('change', renderByMonth);
+    document.getElementById('issues-release-select').addEventListener('change', renderIssues);
+    document.getElementById('issues-date-range-select').addEventListener('change', () => {
+      const val = document.getElementById('issues-date-range-select').value;
+      document.getElementById('issues-custom-dates').style.display = val === 'custom' ? 'flex' : 'none';
+      if (val !== 'custom') renderIssues();
+    });
+    document.getElementById('issues-date-apply').addEventListener('click', () => renderIssues());
+    document.getElementById('issues-search').addEventListener('input', () => renderIssues());
+    document.getElementById('issues-category-select').addEventListener('change', () => {
+      const cat  = document.getElementById('issues-category-select').value;
+      const wrap = document.getElementById('issues-subcategory-select-wrap');
+      const sel  = document.getElementById('issues-subcategory-select');
+      const subcats = new Set();
+      const subcatCol = `${cat} Subcategory`;
+      if (dashboardData && cat !== '__all__') {
+        const catRows = (dashboardData.raw_rows_by_category || {})[cat] || [];
+        catRows.forEach(r => {
+          const v = (r[subcatCol] || '').trim();
+          if (v) subcats.add(v);
+        });
+      }
+      if (subcats.size > 0) {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        [...subcats].sort().forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sel.appendChild(opt);
+        });
+        wrap.style.display = '';
+      } else {
+        sel.innerHTML = '<option value="__all__">All subcategories</option>';
+        wrap.style.display = 'none';
+      }
+      renderIssues();
+    });
+    document.getElementById('issues-subcategory-select').addEventListener('change', renderIssues);
+
+    document.getElementById('overview-date-range-select').addEventListener('change', () => {
+      const val = document.getElementById('overview-date-range-select').value;
+      document.getElementById('overview-custom-dates').style.display = val === 'custom' ? 'flex' : 'none';
+      if (val !== 'custom') renderOverview();
+    });
+    document.getElementById('overview-date-apply').addEventListener('click', () => renderOverview());
+
+    document.getElementById('date-range-select').addEventListener('change', () => {
+      const val = document.getElementById('date-range-select').value;
+      document.getElementById('drilldown-custom-dates').style.display = val === 'custom' ? 'flex' : 'none';
+      if (val !== 'custom') renderDrilldown();
+    });
+    document.getElementById('drilldown-date-apply').addEventListener('click', () => renderDrilldown());
+
+    document.getElementById('accounts-date-range-select').addEventListener('change', () => {
+      const val = document.getElementById('accounts-date-range-select').value;
+      document.getElementById('accounts-custom-dates').style.display = val === 'custom' ? 'flex' : 'none';
+      if (val !== 'custom') renderAccounts();
+    });
+    document.getElementById('accounts-date-apply').addEventListener('click', () => renderAccounts());
+    document.getElementById('accounts-release-select').addEventListener('change', renderAccounts);
+    document.getElementById('accounts-search').addEventListener('input', renderAccounts);
+
+    document.getElementById('export-category-select').addEventListener('change', renderExport);
+    document.getElementById('export-release-select').addEventListener('change', renderExport);
+    document.getElementById('export-include-feed').addEventListener('change', renderExport);
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const btn = document.getElementById('export-btn');
+      const state = btn._exportState;
+      if (!state || !dashboardData) return;
+
+      const allCats = Object.keys(dashboardData.category_counts || {});
+      const selectedCats = state.catVal === '__all__' ? allCats : [state.catVal];
+
+      function normaliseRelExport(r) {
+        return normaliseRel(r[dashboardData.release_column]);
+      }
+
+      // Union rows across selected categories, deduplicated by Case Number
+      const seen = new Set();
+      const rows = [];
+      selectedCats.forEach(cat => {
+        let catRows = filterRowsByDate(
+          (dashboardData.raw_rows_by_category || {})[cat] || [], state.from, state.to
+        );
+        if (state.relVal && state.relVal !== '__all__') {
+          catRows = catRows.filter(r => normaliseRelExport(r) === state.relVal);
+        }
+        catRows.forEach(r => {
+          const key = r['Case Number'] || JSON.stringify(r);
+          if (!seen.has(key)) { seen.add(key); rows.push(r); }
+        });
+      });
+
+      if (!rows.length) { alert('No matching rows to export.'); return; }
+
+      // Build CSV — Excel has a 32,767 char limit per cell AND a ~32KB line length
+      // limit in its CSV parser. Sanitise both.
+      const EXCEL_CELL_MAX = 32767;
+      const EXCEL_LINE_MAX = 32767;
+      const cols = state.includeFeed
+        ? dashboardData.columns || Object.keys(rows[0])
+        : (dashboardData.columns || Object.keys(rows[0])).filter(c => c !== 'Comments' && c !== 'Body');
+      let truncatedCells = 0;
+
+      const sanitise = v => String(v == null ? '' : v)
+        .replace(/\r\n|\r|\n/g, ' ')  // real newlines → space
+        .replace(/"/g, "'");           // double-quotes → single-quotes (avoids Excel CSV parser bugs near 32KB boundary)
+      const wrap = s => `"${s}"`;      // no doubling needed — quotes already replaced
+
+      const lines = [cols.map(c => wrap(sanitise(c))).join(',')];
+      rows.forEach(r => {
+        // First pass: sanitise and per-cell truncate
+        const cells = cols.map(c => {
+          let s = sanitise(r[c]);
+          if (s.length > EXCEL_CELL_MAX) { s = s.slice(0, EXCEL_CELL_MAX); truncatedCells++; }
+          return s;
+        });
+        // Second pass: if the assembled line exceeds Excel's line limit, trim the
+        // longest wrapped cell until the line fits. Work with wrapped lengths to
+        // account for quote-doubling expansion.
+        let wrapped = cells.map(wrap);
+        let line    = wrapped.join(',');
+        while (line.length > EXCEL_LINE_MAX) {
+          // Find the longest wrapped cell and trim it by the excess chars
+          let worstIdx = 0;
+          for (let i = 1; i < wrapped.length; i++) {
+            if (wrapped[i].length > wrapped[worstIdx].length) worstIdx = i;
+          }
+          const excess   = line.length - EXCEL_LINE_MAX;
+          const newInner = cells[worstIdx].slice(0, Math.max(0, cells[worstIdx].length - excess - 1));
+          if (newInner.length < cells[worstIdx].length) truncatedCells++;
+          else break; // safety: nothing changed, avoid infinite loop
+          cells[worstIdx]   = newInner;
+          wrapped[worstIdx] = wrap(newInner);
+          line = wrapped.join(',');
+        }
+        lines.push(line);
+      });
+
+      const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `export-${state.catVal === '__all__' ? 'all' : state.catVal.replace(/[^a-z0-9]/gi, '_')}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      const noteEl = document.getElementById('export-truncation-note');
+      if (truncatedCells > 0) {
+        noteEl.textContent = `${truncatedCells} cell${truncatedCells === 1 ? '' : 's'} truncated for Excel compatibility (32,767 char cell/line limit).`;
+        noteEl.style.display = '';
+      } else {
+        noteEl.style.display = 'none';
+      }
+    });
+
+    document.getElementById('export-date-range-select').addEventListener('change', () => {
+      const val = document.getElementById('export-date-range-select').value;
+      document.getElementById('export-custom-dates').style.display = val === 'custom' ? 'flex' : 'none';
+      if (val !== 'custom') renderExport();
+    });
+    document.getElementById('export-date-apply').addEventListener('click', () => renderExport());
+
+    // ── Re-render all tabs (called after versionFloor changes) ───────────────
+    function rerenderAll() {
+      if (!dashboardData) return;
+      allReleases = buildAllReleases(dashboardData);
+
+      renderStats(dashboardData);
+      renderOverview(dashboardData);
+
+      // Repopulate By Issue release dropdown
+      const issuesRelSel = document.getElementById('issues-release-select');
+      issuesRelSel.innerHTML = '<option value="__all__">All releases</option>';
+      allReleases.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        issuesRelSel.appendChild(opt);
+      });
+
+      // Repopulate By Issue category dropdown
+      const issuesCatSel = document.getElementById('issues-category-select');
+      issuesCatSel.innerHTML = '<option value="__all__">All categories</option>';
+      Object.keys(dashboardData.raw_rows_by_category || {}).forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        issuesCatSel.appendChild(opt);
+      });
+      document.getElementById('issues-subcategory-select').innerHTML = '<option value="__all__">All subcategories</option>';
+      document.getElementById('issues-subcategory-select-wrap').style.display = 'none';
+
+      renderIssues();
+
+      // Repopulate Top Accounts release dropdown
+      const accountsRelSel = document.getElementById('accounts-release-select');
+      accountsRelSel.innerHTML = '<option value="__all__">All releases</option>';
+      allReleases.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        accountsRelSel.appendChild(opt);
+      });
+      renderAccounts();
+
+      // Repopulate By release category dropdown
+      const cats   = Object.keys(dashboardData.category_counts || {});
+      const rows   = dashboardData.release_by_category || [];
+      const select = document.getElementById('category-select');
+      const prevCat = select.value;
+      select.innerHTML = '';
+      cats.forEach(cat => {
+        if (!rows.some(r => r.category === cat)) return;
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        select.appendChild(opt);
+      });
+      const allCatsOpt = document.createElement('option');
+      allCatsOpt.value = '__all__'; allCatsOpt.textContent = 'All categories';
+      select.appendChild(allCatsOpt);
+      if (prevCat) select.value = prevCat;
+      select.dispatchEvent(new Event('change'));
+
+      // Repopulate By month category dropdown
+      const bymonthSelect = document.getElementById('bymonth-category-select');
+      const prevBM = bymonthSelect.value;
+      bymonthSelect.innerHTML = '<option value="__all__">All categories</option>';
+      cats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        bymonthSelect.appendChild(opt);
+      });
+      if (prevBM) bymonthSelect.value = prevBM;
+      bymonthSelect.dispatchEvent(new Event('change'));
+
+      // Repopulate Export release dropdown
+      const exportRelSel = document.getElementById('export-release-select');
+      exportRelSel.innerHTML = '<option value="__all__">All releases</option>';
+      allReleases.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        exportRelSel.appendChild(opt);
+      });
+    }
+
+    // ── Load dashboard ────────────────────────────────────────────────────────
+    function setDashboardSourceInfo(source, label) {
+      const el = document.getElementById('dashboard-source-info');
+      el.style.display = '';
+      el.innerHTML = `Dashboard loaded from <strong>${source}</strong>: ${label}`;
+    }
+
+    async function loadDashboard() {
+      const path = document.getElementById('data-path').value.trim();
+      const errBanner = document.getElementById('error-banner');
+      errBanner.classList.remove('visible');
+
+      let data;
+      try {
+        const resp = await fetch(path + '?_=' + Date.now());
+        if (!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
+        data = await resp.json();
+      } catch (e) {
+        errBanner.textContent = `Failed to load dashboard data: ${e.message}`;
+        errBanner.classList.add('visible');
+        return;
+      }
+
+      setDashboardSourceInfo('repository', path);
+      dashboardData = data;
+      allReleases   = buildAllReleases(data);
+
+      // Constrain custom date pickers to the data's actual date range
+      const dr = data.date_range || {};
+      if (dr.oldest || dr.newest) {
+        ['overview-date-from', 'drilldown-date-from', 'accounts-date-from', 'export-date-from', 'issues-date-from'].forEach(id => {
+          const el = document.getElementById(id);
+          if (dr.oldest) el.min = dr.oldest;
+          if (dr.newest) el.max = dr.newest;
+        });
+        ['overview-date-to', 'drilldown-date-to', 'accounts-date-to', 'export-date-to', 'issues-date-to'].forEach(id => {
+          const el = document.getElementById(id);
+          if (dr.oldest) el.min = dr.oldest;
+          if (dr.newest) el.max = dr.newest;
+        });
+      }
+
+      document.getElementById('debug-output').textContent = JSON.stringify(data, null, 2);
+
+      // Populate exclusions list
+      const exclusionsList = document.getElementById('exclusions-list');
+      const excluded = data.excluded_cluster_descriptions || [];
+      if (excluded.length) {
+        exclusionsList.innerHTML = excluded.map(d => `<li>${d}</li>`).join('');
+      } else {
+        exclusionsList.innerHTML = '<li style="color:#a8a8a8;font-style:italic">No exclusions configured.</li>';
+      }
+
+      // Reset version floor slider on new data load
+      versionFloor = 0;
+      const floorSlider = document.getElementById('version-floor-slider');
+      if (floorSlider) { floorSlider.value = '0'; }
+      document.getElementById('version-floor-label').textContent = 'Off (no versions ignored)';
+
+      renderStats(data);
+      renderOverview(data);
+
+      // Populate By Issue release dropdown
+      const issuesRelSel = document.getElementById('issues-release-select');
+      issuesRelSel.innerHTML = '<option value="__all__">All releases</option>';
+      allReleases.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        issuesRelSel.appendChild(opt);
+      });
+
+      // Populate By Issue category dropdown
+      const issuesCatSel = document.getElementById('issues-category-select');
+      issuesCatSel.innerHTML = '<option value="__all__">All categories</option>';
+      Object.keys(data.raw_rows_by_category || {}).forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        issuesCatSel.appendChild(opt);
+      });
+      document.getElementById('issues-subcategory-select').innerHTML = '<option value="__all__">All subcategories</option>';
+      document.getElementById('issues-subcategory-select-wrap').style.display = 'none';
+
+      renderIssues();
+
+      // Populate Top Accounts release dropdown
+      const accountsRelSel = document.getElementById('accounts-release-select');
+      accountsRelSel.innerHTML = '<option value="__all__">All releases</option>';
+      allReleases.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        accountsRelSel.appendChild(opt);
+      });
+
+      renderAccounts();
+
+      // Populate category dropdowns (By release + By month)
+      const cats   = Object.keys(data.category_counts || {});
+      const rows   = data.release_by_category || [];
+      const select = document.getElementById('category-select');
+      select.innerHTML = '';
+      cats.forEach(cat => {
+        if (!rows.some(r => r.category === cat)) return;
+        const opt = document.createElement('option');
+        opt.value       = cat;
+        opt.textContent = cat;
+        select.appendChild(opt);
+      });
+      const allCatsOptLoad = document.createElement('option');
+      allCatsOptLoad.value = '__all__'; allCatsOptLoad.textContent = 'All categories';
+      select.appendChild(allCatsOptLoad);
+      // Fire change so the subcategory dropdown is initialised for the first category
+      select.dispatchEvent(new Event('change'));
+
+      // By month category dropdown — "All categories" + each category
+      const bymonthSelect = document.getElementById('bymonth-category-select');
+      bymonthSelect.innerHTML = '<option value="__all__">All categories</option>';
+      cats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value       = cat;
+        opt.textContent = cat;
+        bymonthSelect.appendChild(opt);
+      });
+      bymonthSelect.dispatchEvent(new Event('change'));
+
+      // Export tab — category dropdown
+      const exportSelect = document.getElementById('export-category-select');
+      exportSelect.innerHTML = '<option value="__all__">All categories</option>';
+      cats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value       = cat;
+        opt.textContent = cat;
+        exportSelect.appendChild(opt);
+      });
+
+      // Export tab — release dropdown
+      const exportRelSel = document.getElementById('export-release-select');
+      exportRelSel.innerHTML = '<option value="__all__">All releases</option>';
+      allReleases.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        exportRelSel.appendChild(opt);
+      });
+
+      document.getElementById('main-tabs').style.display = '';
+      activateTab('overview');
+    }
+
+    document.getElementById('data-path-select').addEventListener('change', function () {
+      document.getElementById('data-path').value = this.value;
+      loadDashboard();
+    });
+
+    // ── Local file picker ─────────────────────────────────────────────────────
+    document.getElementById('local-file-input').addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const errBanner = document.getElementById('error-banner');
+      errBanner.classList.remove('visible');
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        let data;
+        try {
+          data = JSON.parse(e.target.result);
+        } catch (err) {
+          errBanner.textContent = `Failed to parse JSON: ${err.message}`;
+          errBanner.classList.add('visible');
+          return;
+        }
+        setDashboardSourceInfo('local', file.name);
+        // Update data-path to the actual filename so isNoFeed detection works correctly
+        document.getElementById('data-path').value = file.name;
+        dashboardData = data;
+        allReleases   = buildAllReleases(data);
+        const dr = data.date_range || {};
+        if (dr.oldest || dr.newest) {
+          ['overview-date-from', 'drilldown-date-from', 'accounts-date-from', 'export-date-from', 'issues-date-from'].forEach(id => {
+            const el = document.getElementById(id);
+            if (dr.oldest) el.min = dr.oldest;
+            if (dr.newest) el.max = dr.newest;
+          });
+          ['overview-date-to', 'drilldown-date-to', 'accounts-date-to', 'export-date-to', 'issues-date-to'].forEach(id => {
+            const el = document.getElementById(id);
+            if (dr.oldest) el.min = dr.oldest;
+            if (dr.newest) el.max = dr.newest;
+          });
+        }
+        rerenderAll();
+      };
+      reader.onerror = function () {
+        errBanner.textContent = 'Failed to read local file.';
+        errBanner.classList.add('visible');
+      };
+      reader.readAsText(file);
+    });
+
+    // ── Version floor slider ──────────────────────────────────────────────────
+    document.getElementById('version-floor-slider').addEventListener('input', function () {
+      const val = parseInt(this.value, 10);
+      versionFloor = val;
+      const lbl = document.getElementById('version-floor-label');
+      lbl.textContent = val === 0
+        ? 'Off (no versions ignored)'
+        : `Ignore 2.1 – 2.${val} (treated as Unknown)`;
+      rerenderAll();
+    });
+
+    // Auto-load on page open using the selected dropdown value
+    document.getElementById('data-path').value = document.getElementById('data-path-select').value;
+    loadDashboard();
+  </script>
+</body>
+</html>
